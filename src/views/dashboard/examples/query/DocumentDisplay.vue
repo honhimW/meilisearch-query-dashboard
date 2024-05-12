@@ -231,7 +231,7 @@ const displayType = ref('html')
         <ItemTable
           v-if="displayType === 'html'"
           :row="doc.hit"
-          class="max-w-[100%]"
+          class="max-w-[100%] max-h-[100%]"
         />
         <!--      <div class="flex-1 whitespace-pre-wrap p-4 text-sm">-->
         <!--        {{ doc.doc }}-->
