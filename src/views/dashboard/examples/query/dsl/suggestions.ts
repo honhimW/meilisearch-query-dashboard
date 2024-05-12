@@ -375,7 +375,7 @@ const resolveByPreTokens = (tokenStream: TokenStream, prevIndex: number, tokens:
   return items
 }
 
-const isTokens = (tokens: string[], ...ts: string): boolean => {
+const isTokens = (tokens: string[], ...ts: string[]): boolean => {
   if (tokens.length != ts.length) {
     return false
   }
