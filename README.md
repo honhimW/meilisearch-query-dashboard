@@ -5,8 +5,6 @@
  </h1>
 </p>
 
----
-
 ## Simple Query DSL (Antlr4)
 
 [See MsDsl.g4 here.](./antlr4/MsDsl.g4)
@@ -67,3 +65,5 @@ Rendered Search params:
 //  ...
 }
 ```
+---
+![/Query](./misc/screenshot_1.png "Dashboard")
