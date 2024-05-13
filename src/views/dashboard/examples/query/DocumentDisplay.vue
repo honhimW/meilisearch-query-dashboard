@@ -17,6 +17,12 @@ import type { MDocument } from '@/views/dashboard/examples/query/DocumentList.vu
 import MonacoEditor from '@/views/dashboard/examples/query/MonacoEditor.vue'
 import { ThemeChangeEvent } from '@/stores/app'
 import ItemTable from '@/views/dashboard/examples/query/ItemTable.vue'
+import { editor } from 'monaco-editor'
+import IEditorOptions = editor.IEditorOptions
+import { useToast } from '@/components/ui/toast'
+import { cn } from '@/lib/utils'
+import { MeiliSearchCommunicationError } from 'meilisearch/src/errors/meilisearch-communication-error'
+const { toasts } = useToast()
 
 interface MailDisplayProps {
   doc: MDocument | undefined
@@ -53,6 +59,60 @@ const today = new Date()
 
 const displayType = ref('html')
 
+const monacoEditorOptions = ref<IEditorOptions>({
+  readOnly: true
+})
+
+const updateOptions = (options: IEditorOptions) => {
+  monacoEditorOptions.value = {
+    ...monacoEditorOptions,
+    ...options
+  }
+}
+
+const editable = (flag: boolean) => {
+  let readOnly = !flag
+  updateOptions({
+    readOnly: readOnly
+  })
+}
+
+const monacoEditorValue = ref<string>(JSON.stringify(props.doc?.hit, null, 2))
+
+const saveDocument = () => {
+  if (props.doc?.indexUid) {
+    let parse = JSON.parse(monacoEditorValue.value, (key, value) => {
+      if (key == '_formatted' || key == '_rankingScore') {
+        return undefined
+      }
+      return value
+    })
+    window.msClient.index(props.doc.indexUid).updateDocuments(parse)
+      .then(value => {
+        useToast().toast({
+          class: cn(
+            'right-0 bottom-0 flex fixed md:max-w-[420px] md:right-4 md:bottom-4'
+          ),
+          title: 'Update document!',
+          description: value.taskUid.toString(),
+          duration: 4000,
+        })
+      })
+      .catch(reason => {
+        let error = reason as MeiliSearchCommunicationError
+        useToast().toast({
+          class: cn(
+            'right-0 bottom-0 flex fixed md:max-w-[420px] md:right-4 md:bottom-4'
+          ),
+          variant: 'destructive',
+          title: `${error.code}`,
+          description: error.message,
+          duration: 4000,
+        })
+      })
+  }
+}
+
 </script>
 
 <template>
@@ -60,24 +120,24 @@ const displayType = ref('html')
     <div class="flex h-full flex-col">
       <div class="flex items-center p-2">
         <div class="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button variant="ghost" size="icon" :disabled="!doc">
-                <Archive class="size-4" />
-                <span class="sr-only">Archive</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Archive</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button variant="ghost" size="icon" :disabled="!doc">
-                <ArchiveX class="size-4" />
-                <span class="sr-only">Move to junk</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Move to junk</TooltipContent>
-          </Tooltip>
+<!--          <Tooltip>-->
+<!--            <TooltipTrigger as-child>-->
+<!--              <Button variant="ghost" size="icon" :disabled="!doc">-->
+<!--                <Archive class="size-4" />-->
+<!--                <span class="sr-only">Archive</span>-->
+<!--              </Button>-->
+<!--            </TooltipTrigger>-->
+<!--            <TooltipContent>Archive</TooltipContent>-->
+<!--          </Tooltip>-->
+<!--          <Tooltip>-->
+<!--            <TooltipTrigger as-child>-->
+<!--              <Button variant="ghost" size="icon" :disabled="!doc">-->
+<!--                <ArchiveX class="size-4" />-->
+<!--                <span class="sr-only">Move to junk</span>-->
+<!--              </Button>-->
+<!--            </TooltipTrigger>-->
+<!--            <TooltipContent>Move to junk</TooltipContent>-->
+<!--          </Tooltip>-->
           <Tooltip>
             <TooltipTrigger as-child>
               <Button variant="ghost" size="icon" :disabled="!doc">
@@ -172,21 +232,6 @@ const displayType = ref('html')
             </Tooltip>
           </ToggleGroup>
         </div>
-        <!--        <Separator orientation="vertical" class="mx-2 h-6" />-->
-        <!--        <DropdownMenu>-->
-        <!--          <DropdownMenuTrigger as-child>-->
-        <!--            <Button variant="ghost" size="icon" :disabled="!doc">-->
-        <!--              <MoreVertical class="size-4" />-->
-        <!--              <span class="sr-only">More</span>-->
-        <!--            </Button>-->
-        <!--          </DropdownMenuTrigger>-->
-        <!--          <DropdownMenuContent align="end">-->
-        <!--            <DropdownMenuItem>Mark as unread</DropdownMenuItem>-->
-        <!--            <DropdownMenuItem>Star thread</DropdownMenuItem>-->
-        <!--            <DropdownMenuItem>Add label</DropdownMenuItem>-->
-        <!--            <DropdownMenuItem>Mute thread</DropdownMenuItem>-->
-        <!--          </DropdownMenuContent>-->
-        <!--        </DropdownMenu>-->
         <Separator orientation="vertical" class="mx-2 h-6" />
         <Tooltip>
           <TooltipTrigger as-child>
@@ -224,8 +269,10 @@ const displayType = ref('html')
         <MonacoEditor
           v-if="displayType === 'json'"
           :theme="monacoTheme"
-          :model-value="JSON.stringify(doc.hit, null, 2)"
+          :model-value="monacoEditorValue"
           language="json"
+          :options="monacoEditorOptions"
+          @update:model-value="args => monacoEditorValue = args"
           class="max-w-[100%] max-h-[100%]"
         />
         <ItemTable
@@ -245,14 +292,15 @@ const displayType = ref('html')
                   html-for="mute"
                   class="flex items-center gap-2 text-xs font-normal"
                 >
-                  <Switch id="editable" aria-label="Editable" />
+                  <Switch id="editable" aria-label="Editable" @update:checked="editable" />
                   Editable
                 </Label>
                 <Button
                   type="button"
                   size="sm"
                   class="ml-auto"
-                  :disabled="true"
+                  :disabled="monacoEditorOptions.readOnly"
+                  @click="saveDocument"
                 >
                   Save
                 </Button>

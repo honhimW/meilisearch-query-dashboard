@@ -3,7 +3,7 @@ import type { SearchParams } from 'meilisearch/src/types/types'
 import MonacoEditor from '@/views/dashboard/examples/query/MonacoEditor.vue'
 import * as monaco from 'monaco-editor'
 import { type CancellationToken, editor } from 'monaco-editor'
-import { computed, onMounted, ref, watch, watchEffect } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { getQuery, ThemeChangeEvent, updateQueries } from '@/stores/app'
 import { useMagicKeys } from '@vueuse/core'
 import { allSuggestions } from '@/views/dashboard/examples/query/dsl/suggestions'
@@ -63,30 +63,43 @@ const emitSearch = () => {
 
 const customizeEditor = (editor: monaco.editor.IStandaloneCodeEditor) => {
   editorRef.value = editor
-  editor.addCommand(monaco.KeyCode.Enter, () => {
-    updateQueries('q', o => searchStr.value)
-    emitSearch()
+  editor.addAction({
+    id: 'search_popover',
+    label: 'search_popover',
+    keybindings: [
+      monaco.KeyCode.Enter
+    ],
+    run(editor: editor.ICodeEditor, ...args: any[]): void | Promise<void> {
+      updateQueries('q', o => searchStr.value)
+      emitSearch()
+    }
   })
-  editor.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.Slash, args => {
-    editor.trigger('keyboard', 'editor.action.triggerSuggest', {})
-  }, 'editorTextFocus && !editorReadonly')
-  editor.addCommand(monaco.KeyMod.Alt | monaco.KeyMod.CtrlCmd | monaco.KeyCode.DownArrow, args => {
+  editor.addAction({
+    id: 'suggest',
+    label: 'suggest',
+    keybindings: [
+      monaco.KeyMod.Alt | monaco.KeyCode.Slash
+    ],
+    run(editor: editor.ICodeEditor, ...args: any[]): void | Promise<void> {
+      editor.trigger('keyboard', 'editor.action.triggerSuggest', {})
+    }
   })
-  editor.addCommand(monaco.KeyMod.Alt | monaco.KeyMod.CtrlCmd | monaco.KeyCode.UpArrow, args => {
-  })
-  editor.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.DownArrow, args => {
-  })
-  editor.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.UpArrow, args => {
-  })
-  editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, args => {
-  })
-  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, args => {
-  })
-  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter, args => {
-  })
-  editor.addCommand(monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.DownArrow, args => {
-  })
-  editor.addCommand(monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.UpArrow, args => {
+  editor.addAction({
+    id: 'disable_actions',
+    label: 'disable_actions',
+    keybindings: [
+      monaco.KeyMod.Alt | monaco.KeyMod.CtrlCmd | monaco.KeyCode.DownArrow,
+      monaco.KeyMod.Alt | monaco.KeyMod.CtrlCmd | monaco.KeyCode.UpArrow,
+      monaco.KeyMod.Alt | monaco.KeyCode.DownArrow,
+      monaco.KeyMod.Alt | monaco.KeyCode.UpArrow,
+      monaco.KeyMod.Shift | monaco.KeyCode.Enter,
+      monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+      monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter,
+      monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.DownArrow,
+      monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.UpArrow
+    ],
+    run(editor: editor.ICodeEditor, ...args: any[]): void | Promise<void> {
+    }
   })
 
   editor.onDidChangeModelContent(e => {
@@ -159,7 +172,7 @@ const options: editor.IEditorOptions = {
   selectOnLineNumbers: false,
   scrollBeyondLastLine: false,
   overviewRulerBorder: false,
-  autoClosingQuotes: 'always',
+  autoClosingQuotes: 'always'
 }
 
 onMounted(() => {
@@ -177,20 +190,20 @@ const configDSL = () => {
     return
   }
   monaco.languages.register({
-    id: msDSL,
+    id: msDSL
   })
 
   monaco.languages.setLanguageConfiguration(msDSL, {
     surroundingPairs: [
-      {open: '\'', close: '\''},
-      {open: '"', close: '"'},
-      {open: '[', close: ']'},
+      { open: '\'', close: '\'' },
+      { open: '"', close: '"' },
+      { open: '[', close: ']' }
     ],
     autoClosingPairs: [
-      {open: '\'', close: '\''},
-      {open: '"', close: '"'},
-      {open: '[', close: ']'},
-    ],
+      { open: '\'', close: '\'' },
+      { open: '"', close: '"' },
+      { open: '[', close: ']' }
+    ]
   })
 
   monaco.languages.setTokensProvider(msDSL, new MsDslTokenProvider())
@@ -205,7 +218,7 @@ const configDSL = () => {
       })
 
       return {
-        suggestions: allSuggestions(model, position, getSetting()),
+        suggestions: allSuggestions(model, position, getSetting())
       }
       // if (contentBeforeCursor == '') {
       // }

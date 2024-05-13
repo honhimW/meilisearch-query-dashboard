@@ -133,8 +133,6 @@ const search = (query?: SearchParams | string, page = 0) => {
       mDocumentList.value = mergeResults.value
     }).catch(reason => {
       let error = reason as MeiliSearchCommunicationError
-      console.log({ error })
-
       useToast().toast({
         class: cn(
           'right-0 bottom-0 flex fixed md:max-w-[420px] md:right-4 md:bottom-4'
