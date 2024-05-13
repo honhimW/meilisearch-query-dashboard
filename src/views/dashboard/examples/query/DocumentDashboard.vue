@@ -91,11 +91,17 @@ const processingTimeMs = ref<number>(0)
 const latestQuery = ref<SearchParams | string>()
 const latestPage = ref<number>(0)
 
+const searchLimit = () => {
+  return Number(getQuery('limit') ?? '20')
+}
+
 const search = (query?: SearchParams | string, page = 0) => {
   latestQuery.value = query
   latestPage.value = page
-  let offset = 20 * page
-  let limit = 20 * (page + 1)
+
+  let _limit = searchLimit()
+  let offset = _limit * page
+  let limit = _limit * (page + 1)
 
   if (page == 0) {
     results.value.length = 0
