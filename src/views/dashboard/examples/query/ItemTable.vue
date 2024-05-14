@@ -112,7 +112,7 @@ const columns: ColumnDef<IData>[] = [
   overflow-y: scroll;
   overflow-x: clip;
   display: inline-block;
-  height: 75vh;
+  height: 70vh;
 }
 
 span:hover {

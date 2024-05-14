@@ -38,7 +38,7 @@ export const APP_MENU: Record<string, { name: string, routes: IDashboardMenus[] 
       {
         path: 'task',
         title: 'Tasks',
-        icon: 'Tasks',
+        icon: 'ListTodo',
         description: 'Tasks'
       },
     ],
