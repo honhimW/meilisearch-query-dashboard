@@ -295,7 +295,7 @@ const resolveByPreTokens = (tokenStream: TokenStream, prevIndex: number, tokens:
       )
     })
   } else if (isTokens(tokens, 'HASH', 'IDENTIFIER', '\':\'') || isTokens(tokens, 'STRING', '\':\'')) {
-    let symbols = ['=', '!=', '>', '>=', '<', '<=']
+    let symbols = ['=', '!=', '>', '>=', '<', '<=', 'like']
     symbols.map(symbol => {
       return {
         kind: CompletionItemKind.Operator,

@@ -20,6 +20,7 @@ import {
 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/stores/app'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 const store = useAppStore()
 
@@ -55,10 +56,34 @@ const toggleMode = () => {
         <MoonStar v-else />
       </Button>
       <div class="border-x-[1px] border-gray-300 h-[24px] w-[1px] mx-2"></div>
-      <Button variant="outline" class="border-0 p-[6px] w-8 h-8" @click="store.toggleDialog(true)">
-        <Zap v-if="store.serverUrl" style="color: deeppink"/>
-        <ZapOff v-else style="color: darkred"/>
-      </Button>
+      <TooltipProvider :delay-duration="0">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button variant="outline" class="border-0 p-[6px] w-8 h-8" @click="store.toggleDialog(true)">
+              <Zap v-if="store.serverUrl" style="color: deeppink" />
+              <ZapOff v-else style="color: darkred" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div class="flex justify-between space-x-4">
+              <div class="space-y-1">
+                <h4 class="text-sm font-semibold">
+                  {{ store.serverVersion ?? 'Unknown' }}
+                </h4>
+                <p class="text-sm">
+                  {{ store.serverUrl ?? 'Not Connected.' }}
+                </p>
+                <div class="flex items-center pt-2">
+                  <span class="text-xs text-muted-foreground">
+                    {{ ''.padEnd(store?.apiKey?.length ?? 0, '*') }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
       <!--      <div class="border-x-[1px] border-gray-300 h-[24px] w-[1px] mx-2"></div>-->
       <!--      <DropdownMenu>-->
       <!--        <DropdownMenuTrigger as-child>-->

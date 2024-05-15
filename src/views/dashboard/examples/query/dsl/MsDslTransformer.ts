@@ -6,6 +6,7 @@ import type { MsDslError } from '@/lib/MsDslErrorListener'
 import type { Token } from 'antlr4'
 import { TokenStream } from 'antlr4/src/antlr4/TokenStream'
 import { ParserRuleContext } from 'antlr4/src/antlr4/context/ParserRuleContext'
+import { useAppStore } from '@/stores/app'
 
 export const checkLexer = (input: string): MsDslError[] | undefined => {
   const { lexerErrors } = toAST(input)
@@ -49,10 +50,13 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
     highlightPostTag: '</ais-hl-msq-t>',
     limit: 20,
     offset: 0,
-    // showRankingScore: true,
     filter: filters,
-    sort: sorts,
-    // attributesToSearchOn: ['*'],
+    sort: sorts
+  }
+
+  if (useAppStore().serverVersion > '1.3') {
+    searchParams.showRankingScore = true
+    searchParams.attributesToSearchOn = ['*']
   }
 
   const settingErrors: MsDslError[] = []
@@ -75,8 +79,8 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
         const symbol = filterContentContext.FILTER_SYMBOLS()
         const valueContext = filterContentContext.value()
         const keyText = getKey(keyContext)
-        const symbolText = symbol?.getText()
-        const valueText = getValue(valueContext)
+        let symbolText = symbol?.getText()
+        let valueText = getValue(valueContext)
         if (keyText && symbolText && valueText) {
           if (!filterableAttributes.includes(keyText) && !filterableAttributes.includes('*')) {
             const token = (keyContext as unknown as ParserRuleContext).start
@@ -84,8 +88,23 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
               line: 1,
               startColumn: token.start + 1,
               endColumn: token.stop + 1,
-              message: `[${keyText}] is not a filterable attribute.`,
+              message: `[${keyText}] is not a filterable attribute.`
             })
+          }
+          if (symbolText == 'like') {
+            symbolText = '='
+            if ((valueText.startsWith('\'%') && valueText.endsWith('%\'')) ||
+              (valueText.startsWith('"%') && valueText.endsWith('%"'))
+            ) {
+              symbolText = 'CONTAINS'
+              valueText = valueText.slice(2, -2)
+            } else if (valueText.startsWith('\'%') || valueText.startsWith('"%')) {
+              symbolText = 'STARTS WITH'
+              valueText = valueText.slice(2, -1)
+            } else if (valueText.endsWith('%\'') || valueText.endsWith('%"')) {
+              symbolText = 'ENDS WITH'
+              valueText = valueText.slice(1, -2)
+            }
           }
           filters.push(`${keyText} ${symbolText} ${valueText}`)
         }
@@ -101,7 +120,7 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
             line: 1,
             startColumn: token.start + 1,
             endColumn: token.stop + 1,
-            message: `[${keyText}] is not a sortable attribute.`,
+            message: `[${keyText}] is not a sortable attribute.`
           })
         }
         if (asc) {
@@ -119,7 +138,7 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
             line: 1,
             startColumn: token.start + 1,
             endColumn: token.stop + 1,
-            message: `[${key}] is not a searchable attribute.`,
+            message: `[${key}] is not a searchable attribute.`
           })
         }
         ons.push(key)
@@ -144,7 +163,7 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
     le: lexerErrors,
     pe: parserErrors,
     tokenStream: tokenStream,
-    settingErrors: settingErrors,
+    settingErrors: settingErrors
   }
 }
 

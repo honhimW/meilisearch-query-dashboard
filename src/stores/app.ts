@@ -11,6 +11,7 @@ interface IAppStore {
   showDialog: boolean
   serverUrl: string | undefined
   apiKey: string | undefined
+  serverVersion: string | undefined
 }
 
 const LIGHT = 'light';
@@ -21,6 +22,7 @@ const SHRINKED = 72;
 
 const SERVER_URL_KEY = 'meiliServer'
 const SERVER_API_KEY_KEY = 'apiKey'
+const SERVER_VERSION = 'pkgVersion'
 
 export const useAppStore = defineStore('app', {
   state: () => <IAppStore>({
@@ -32,6 +34,7 @@ export const useAppStore = defineStore('app', {
     showDialog: false,
     serverUrl: undefined,
     apiKey: undefined,
+    serverVersion: undefined
   }),
   getters: {
     theme: (state) => state.themeMode,
@@ -106,6 +109,10 @@ export const useAppStore = defineStore('app', {
         window.msClient = new MeiliSearch({
           host: this.serverUrl,
           apiKey: this.apiKey
+        })
+        window.msClient.getVersion().then(value => {
+          this.serverVersion = value.pkgVersion
+          localStorage.setItem(SERVER_VERSION, value.pkgVersion)
         })
       }
     },

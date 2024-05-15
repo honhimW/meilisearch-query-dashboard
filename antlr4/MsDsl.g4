@@ -39,7 +39,7 @@ ASC: '+';
 DESC: '-';
 
 filterContent
-    : HASH key ':' (FILTER_SYMBOLS | PROTOTYPE_FILTER_SYMBOLS) value
+    : HASH key ':' FILTER_SYMBOLS value
     ;
 
 HASH: '#';
@@ -51,10 +51,7 @@ FILTER_SYMBOLS
     | '>='
     | '<'
     | '<='
-    ;
-
-PROTOTYPE_FILTER_SYMBOLS
-    : 'like'
+    | 'like'
     ;
 
 queryContent
