@@ -39,7 +39,7 @@ const router = createRouter({
         {
           path: 'task',
           name: 'tasks_index',
-          component: () => import('@/views/dashboard/examples/tasks/Index2.vue'),
+          component: () => import('@/views/dashboard/examples/tasks/Index.vue'),
           meta: {
             title: 'Tasks',
           } as RouteMeta & IRouteMeta

@@ -8,14 +8,14 @@ import { TokenStream } from 'antlr4/src/antlr4/TokenStream'
 import { ParserRuleContext } from 'antlr4/src/antlr4/context/ParserRuleContext'
 
 export const checkLexer = (input: string): MsDslError[] | undefined => {
-  let { lexerErrors } = toAST(input)
+  const { lexerErrors } = toAST(input)
   if (lexerErrors) {
     return lexerErrors
   }
 }
 
 export const checkParser = (input: string): MsDslError[] | undefined => {
-  let { parserErrors } = toAST(input)
+  const { parserErrors } = toAST(input)
   if (parserErrors) {
     return parserErrors
   }
@@ -28,9 +28,9 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
   tokenStream: TokenStream,
   settingErrors: MsDslError[],
 } => {
-  let { ast, tokenStream, lexerErrors, parserErrors } = toAST(input)
+  const { ast, tokenStream, lexerErrors, parserErrors } = toAST(input)
 
-  let lineContext = ast.line()
+  const lineContext = ast.line()
   let contentContexts: ContentContext[] = []
   if (lineContext.single()) {
     contentContexts.push(lineContext.single().content())
@@ -38,10 +38,10 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
     contentContexts = lineContext.multiple().content_list()
   }
 
-  let filters: Filter = []
-  let sorts: string[] = []
-  let ons: string[] = []
-  let searchParams: SearchParams = {
+  const filters: Filter = []
+  const sorts: string[] = []
+  const ons: string[] = []
+  const searchParams: SearchParams = {
     q: '',
     attributesToHighlight: ['*'],
     facets: [],
@@ -49,17 +49,17 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
     highlightPostTag: '</ais-hl-msq-t>',
     limit: 20,
     offset: 0,
-    showRankingScore: true,
+    // showRankingScore: true,
     filter: filters,
     sort: sorts,
-    attributesToSearchOn: ['*'],
+    // attributesToSearchOn: ['*'],
   }
 
-  let settingErrors: MsDslError[] = []
+  const settingErrors: MsDslError[] = []
 
-  let filterableAttributes: string[] = []
-  let sortableAttributes: string[] = []
-  let searchableAttributes: string[] = ['*']
+  const filterableAttributes: string[] = []
+  const sortableAttributes: string[] = []
+  const searchableAttributes: string[] = ['*']
 
   if (settings) {
     settings.filterableAttributes?.forEach(attr => filterableAttributes?.push(attr))
@@ -68,18 +68,18 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
   }
 
   try {
-    for (let cc of contentContexts) {
+    for (const cc of contentContexts) {
       if (cc.filterContent()) {
-        let filterContentContext = cc.filterContent()
-        let keyContext = filterContentContext.key()
-        let symbol = filterContentContext.FILTER_SYMBOLS()
-        let valueContext = filterContentContext.value()
-        let keyText = getKey(keyContext)
-        let symbolText = symbol.getText()
-        let valueText = getValue(valueContext)
+        const filterContentContext = cc.filterContent()
+        const keyContext = filterContentContext.key()
+        const symbol = filterContentContext.FILTER_SYMBOLS()
+        const valueContext = filterContentContext.value()
+        const keyText = getKey(keyContext)
+        const symbolText = symbol?.getText()
+        const valueText = getValue(valueContext)
         if (keyText && symbolText && valueText) {
           if (!filterableAttributes.includes(keyText) && !filterableAttributes.includes('*')) {
-            let token = (keyContext as unknown as ParserRuleContext).start
+            const token = (keyContext as unknown as ParserRuleContext).start
             settingErrors.push({
               line: 1,
               startColumn: token.start + 1,
@@ -90,13 +90,13 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
           filters.push(`${keyText} ${symbolText} ${valueText}`)
         }
       } else if (cc.sortContent()) {
-        let sortContentContext = cc.sortContent()
-        let asc = sortContentContext.ASC()
-        let desc = sortContentContext.DESC()
-        let keyContext = sortContentContext.key()
-        let keyText = getKey(keyContext)
+        const sortContentContext = cc.sortContent()
+        const asc = sortContentContext.ASC()
+        const desc = sortContentContext.DESC()
+        const keyContext = sortContentContext.key()
+        const keyText = getKey(keyContext)
         if (!sortableAttributes.includes(keyText) && !sortableAttributes.includes('*')) {
-          let token = (keyContext as unknown as ParserRuleContext).start
+          const token = (keyContext as unknown as ParserRuleContext).start
           settingErrors.push({
             line: 1,
             startColumn: token.start + 1,
@@ -110,11 +110,11 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
           sorts.push(keyText + ':desc')
         }
       } else if (cc.onContent()) {
-        let onContentContext = cc.onContent()
-        let keyContext = onContentContext.key()
-        let key = getKey(keyContext)
+        const onContentContext = cc.onContent()
+        const keyContext = onContentContext.key()
+        const key = getKey(keyContext)
         if ('*' != key && !searchableAttributes.includes(key) && !searchableAttributes.includes('*')) {
-          let token = (keyContext as unknown as ParserRuleContext).start
+          const token = (keyContext as unknown as ParserRuleContext).start
           settingErrors.push({
             line: 1,
             startColumn: token.start + 1,
@@ -125,14 +125,19 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
         ons.push(key)
         searchParams.attributesToSearchOn = ons
       } else if (cc.queryContent()) {
-        let queryContentContext = cc.queryContent()
-        let query = getQuery(queryContentContext)
+        const queryContentContext = cc.queryContent()
+        const query = getQuery(queryContentContext)
         if (query) {
-          searchParams.q = query
+          if (searchParams.q == '') {
+            searchParams.q = query
+          } else {
+            searchParams.q = searchParams.q + ' ' + query
+          }
         }
       }
     }
   } catch (e) {
+    console.log(e.toString())
   }
   return {
     sp: searchParams,
@@ -155,7 +160,7 @@ const getKey = (keyContext: KeyContext): string | undefined => {
       keyText = keyText.replaceAll('\\\'', '\'')
     }
   } else if (keyContext.IDENTIFIER_list()) {
-    let ids = keyContext.IDENTIFIER_list()
+    const ids = keyContext.IDENTIFIER_list()
     keyText = ids.map(id => id.getText()).join('.')
   }
   return keyText
