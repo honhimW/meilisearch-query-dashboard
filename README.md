@@ -18,6 +18,7 @@
 * \>= : Greater than or equal to
 * \< : Less than
 * \<= : Less than or equal to
+* like: CONTAINS('%any%') | STARTS WITH('%any') | ENDS WITH('any%') in (prototype-contains-starts-ends-with-filters-0)
 
 ```html
 #<attribute_name> : <operator> <value>
