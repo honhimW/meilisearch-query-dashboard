@@ -1,26 +1,11 @@
 <script setup lang="ts">
 import GlobalSearchPopover from '@/components/core/GlobalSearchPopover.vue'
-import { Avatar, AvatarImage } from '@/components/ui/avatar'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
 import Breadcrumb from '@/components/ui/Breadcrumb.vue'
-import {
-  Zap,
-  ZapOff,
-  Sun,
-  MoonStar,
-  Menu
-} from 'lucide-vue-next'
+import { Link, Menu, MoonStar, PartyPopper, Sun, Zap, ZapOff } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/stores/app'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Separator } from '@/components/ui/separator'
 
 const store = useAppStore()
 
@@ -67,15 +52,17 @@ const toggleMode = () => {
           <TooltipContent>
             <div class="flex justify-between space-x-4">
               <div class="space-y-1">
-                <h4 class="text-sm font-semibold">
-                  {{ store.serverVersion ?? 'Unknown' }}
-                </h4>
-                <p class="text-sm">
-                  {{ store.serverUrl ?? 'Not Connected.' }}
-                </p>
-                <div class="flex items-center pt-2">
-                  <span class="text-xs text-muted-foreground">
-                    {{ ''.padEnd(store?.apiKey?.length ?? 0, '*') }}
+                <div class="flex justify-between">
+                  <PartyPopper class="mr-2 h-4 w-4" />
+                  <h4 class="text-sm font-semibold">
+                    {{ store.serverVersion ?? 'Unknown' }}
+                  </h4>
+                </div>
+                <Separator />
+                <div class="flex justify-between">
+                  <Link class="mr-2 h-4 w-4" />
+                  <span class="text-sm">
+                    {{ store.serverUrl ?? 'Not Connected.' }}
                   </span>
                 </div>
               </div>
@@ -83,35 +70,6 @@ const toggleMode = () => {
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-
-      <!--      <div class="border-x-[1px] border-gray-300 h-[24px] w-[1px] mx-2"></div>-->
-      <!--      <DropdownMenu>-->
-      <!--        <DropdownMenuTrigger as-child>-->
-      <!--          <Button variant="outline" class="border-0 flex items-center max-w-[200px] w-full justify-start">-->
-      <!--            <Avatar class="h-8 w-8">-->
-      <!--              <AvatarImage src="https://github.com/radix-vue.png"></AvatarImage>-->
-      <!--            </Avatar>-->
-      <!--            <span class="ml-2 hidden md:flex justify-start flex-col items-start">-->
-      <!--              <p class="mb-0">John Doe</p>-->
-      <!--              <small class="text-xs text-slate-400 font-light">john_doe@email.com</small>-->
-      <!--            </span>-->
-      <!--          </Button>-->
-      <!--        </DropdownMenuTrigger>-->
-      <!--        <DropdownMenuContent class="w-56 relative mr-4">-->
-      <!--          <DropdownMenuLabel>John Doe</DropdownMenuLabel>-->
-      <!--          <DropdownMenuSeparator />-->
-      <!--          <DropdownMenuItem>-->
-      <!--            <User class="mr-2 h-4 w-4" />-->
-      <!--            <span>Profile</span>-->
-      <!--          </DropdownMenuItem>-->
-      <!--          <DropdownMenuSeparator />-->
-      <!--          <DropdownMenuItem>-->
-      <!--            <LogOut class="mr-2 h-4 w-4" />-->
-      <!--            <span>Log out</span>-->
-      <!--            <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>-->
-      <!--          </DropdownMenuItem>-->
-      <!--        </DropdownMenuContent>-->
-      <!--      </DropdownMenu>-->
     </div>
   </nav>
 </template>

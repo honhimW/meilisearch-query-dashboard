@@ -86,7 +86,7 @@ onUnmounted(() => {
       <Input
         ref="gsi"
         v-model="search"
-        placeholder="ctrl G"
+        placeholder="⌘ G"
         class="w-full global-search__input"
         @focus="handleFocus"
         @blur="handleFocus"

@@ -7,7 +7,8 @@ import autoprefixer from 'autoprefixer'
 export default defineConfig(({ mode }) => {
   const rootDir = path.resolve(__dirname, 'src');
   const env = loadEnv(mode, process.cwd(), '');
-  const production = env.NODE_ENV === 'production';
+  const production = env.NODE_ENV === 'dev';
+  // const production = env.NODE_ENV === 'production';
 
   return {
     root: rootDir,
