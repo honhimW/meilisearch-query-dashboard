@@ -105,6 +105,7 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
                 symbolText = 'ENDS WITH'
                 valueText = valueText.slice(0, -1)
               }
+              valueText = '\'' + valueText + '\''
             }
           }
           filters.push(`${keyText} ${symbolText} ${valueText}`)
