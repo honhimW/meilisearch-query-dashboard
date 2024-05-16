@@ -93,17 +93,18 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
           }
           if (symbolText == 'like') {
             symbolText = '='
-            if ((valueText.startsWith('\'%') && valueText.endsWith('%\'')) ||
-              (valueText.startsWith('"%') && valueText.endsWith('%"'))
-            ) {
-              symbolText = 'CONTAINS'
-              valueText = valueText.slice(2, -2)
-            } else if (valueText.startsWith('\'%') || valueText.startsWith('"%')) {
-              symbolText = 'STARTS WITH'
-              valueText = valueText.slice(2, -1)
-            } else if (valueText.endsWith('%\'') || valueText.endsWith('%"')) {
-              symbolText = 'ENDS WITH'
-              valueText = valueText.slice(1, -2)
+            if ((valueText.startsWith('\'') && valueText.endsWith('\'')) || (valueText.startsWith('"') && valueText.endsWith('"'))) {
+              valueText = valueText.slice(1, -1)
+              if (valueText.startsWith('%') && valueText.endsWith('%')) {
+                symbolText = 'CONTAINS'
+                valueText = valueText.slice(1, -1)
+              } else if (valueText.startsWith('%')) {
+                symbolText = 'STARTS WITH'
+                valueText = valueText.slice(1, 0)
+              } else if (valueText.endsWith('%')) {
+                symbolText = 'ENDS WITH'
+                valueText = valueText.slice(0, -1)
+              }
             }
           }
           filters.push(`${keyText} ${symbolText} ${valueText}`)
