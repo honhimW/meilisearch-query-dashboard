@@ -94,6 +94,7 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
           if (symbolText == 'like') {
             symbolText = '='
             if ((valueText.startsWith('\'') && valueText.endsWith('\'')) || (valueText.startsWith('"') && valueText.endsWith('"'))) {
+              const quote = valueText.charAt(0)
               valueText = valueText.slice(1, -1)
               if (valueText.startsWith('%') && valueText.endsWith('%')) {
                 symbolText = 'CONTAINS'
@@ -105,7 +106,7 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
                 symbolText = 'ENDS WITH'
                 valueText = valueText.slice(0, -1)
               }
-              valueText = '\'' + valueText + '\''
+              valueText = quote + valueText + quote
             }
           }
           filters.push(`${keyText} ${symbolText} ${valueText}`)
