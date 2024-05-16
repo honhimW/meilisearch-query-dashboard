@@ -247,11 +247,6 @@ const saveDocument = () => {
       <div v-if="doc" class="flex flex-1 flex-col">
         <div class="flex items-start p-4">
           <div class="flex items-start gap-4 text-sm">
-            <!--          <Avatar>-->
-            <!--            <AvatarFallback>-->
-            <!--              {{ mailFallbackName }}-->
-            <!--            </AvatarFallback>-->
-            <!--          </Avatar>-->
             <div class="grid gap-1">
               <div class="font-semibold">
                 {{ doc.indexUid }}
@@ -260,9 +255,6 @@ const saveDocument = () => {
                 {{ doc.id }}
               </div>
             </div>
-          </div>
-          <div v-if="doc.date" class="ml-auto text-xs text-muted-foreground">
-            {{ format(new Date(doc.date), 'PPpp') }}
           </div>
         </div>
         <Separator />

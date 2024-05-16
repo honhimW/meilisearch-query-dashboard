@@ -258,6 +258,7 @@ const monacoTheme = ref<string>(toMonacoTheme(localStorage.getItem('themeMode') 
     style="height: 40px"
     :options="options"
     language="msDSL"
+    placeHolder="⌘ K, Tips: q: ..., sort: @sort:+|-..., filter: #...:?..., on: @on:..."
     @editor-mounted="customizeEditor"
     @update:model-value="updateSearchStr"
   />

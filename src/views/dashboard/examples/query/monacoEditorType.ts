@@ -41,6 +41,10 @@ export const editorProps = {
     },
     // default: 'vs-dark',
   },
+  placeHolder: {
+    type: String as PropType<string>,
+    default: '',
+  },
   options: {
     type: Object as PropType<editor.IEditorOptions>,
     default: function () {
