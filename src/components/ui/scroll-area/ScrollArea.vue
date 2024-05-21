@@ -20,11 +20,7 @@ const handleScrollEnd = (e: Event) => {
   let target = e.target
   if (target) {
     let element = target as HTMLElement
-    console.log(element.scrollTop)
-    console.log(element.clientHeight)
-    console.log(element.scrollHeight)
     if (element.scrollTop + element.clientHeight >= element.scrollHeight - 10) {
-      console.log('reach-bottom')
       emits('reach-bottom')
     }
   }

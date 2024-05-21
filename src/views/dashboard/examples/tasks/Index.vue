@@ -37,7 +37,7 @@ import {
 import { valueUpdater } from '@/lib/utils'
 import { Task, TaskStatus, type TaskTypes } from 'meilisearch'
 import router from '@/router'
-import { TasksQuery } from 'meilisearch/src/types'
+import { type TasksQuery } from 'meilisearch/src/types'
 import type { LocationQueryValue } from 'vue-router'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from 'date-fns'
@@ -233,8 +233,8 @@ const columns: ColumnDef<ITableData>[] = [
 
 const filterValue = ref<string>('')
 
-const updateFilter = (value: string) => {
-  filterValue.value = value
+const updateFilter = (value: any) => {
+  filterValue.value = value.toString()
   table.value.getColumn('json')?.setFilterValue(value)
 }
 

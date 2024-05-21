@@ -86,7 +86,6 @@ export default defineComponent({
       })
       addKeyBindings(editor)
 
-      console.log(props)
       if (props.placeHolder && props.placeHolder != '') {
         new PlaceholderContentWidget(props.placeHolder, editor);
       }

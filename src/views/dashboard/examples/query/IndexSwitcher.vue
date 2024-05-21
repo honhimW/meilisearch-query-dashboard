@@ -1,66 +1,144 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Icon } from '@iconify/vue'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Calendar,
+  MoreHorizontal,
+  Tags,
+  RotateCw,
+  User,
+} from 'lucide-vue-next'
+
+import { Button } from '@/components/ui/button'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import router from '@/router'
-import type { LocationQuery } from 'vue-router'
 import { getQuery, updateQueries } from '@/stores/app'
+import { Input } from '@/components/ui/input'
 
 interface IndexSwitcherProps {
   isCollapsed: boolean
-  indexes: {
-    uid: string
-    count: string
-  }[]
+  indexes: Index[]
 }
+
+interface Index {
+  uid: string
+  count: string
+}
+
+const emits = defineEmits<{
+  (e: 'refresh:indexes', hook: () => void): void
+}>()
 
 const props = defineProps<IndexSwitcherProps>()
 
+const selectedIndex = ref<Index | undefined>(props?.indexes[0])
+
 onMounted(() => {
-  let _index = getQuery('_index')
-  if (_index) {
-    selectedIndex.value = _index
+  refresh()
+})
+
+watch(() => selectedIndex.value, value => {
+  if (value) {
+    updateQueries('_index', oldValue => value.uid)
   }
 })
 
-const selectedIndex = ref<string>(props?.indexes[0]?.uid)
+const refresh = () => {
+  emits('refresh:indexes', () => {
+    updateSelectedIndex()
+  })
+}
 
-const selectedIndexData = computed(() => props.indexes.find(item => item.uid === selectedIndex.value))
+const updateSelectedIndex = () => {
+  if (selectedIndex.value) {
+    selectedIndex.value = props.indexes.find(value => value.uid == selectedIndex?.value?.uid)
+  } else if (getQuery('_index')) {
+    selectedIndex.value = props.indexes.find(value => value.uid == getQuery('_index'))
+  } else if (props.indexes.length > 0) {
+    selectedIndex.value = props.indexes[0]
+  } else {
+    selectedIndex.value = undefined
+  }
+}
 
-watch(() => selectedIndex.value, value => {
-  updateQueries('_index', oldValue => value)
-  emits('update:index', value)
-})
+const open = ref(false)
 
-const emits = defineEmits<{
-  (e: 'update:index', payload: string): void
-}>()
 </script>
-
 <template>
-  <Select v-model="selectedIndex">
-    <SelectTrigger
-      aria-label="Select index"
-      :class="cn(
-        'flex items-center gap-2 [&>span]:line-clamp-1 [&>span]:flex [&>span]:w-full [&>span]:items-center [&>span]:gap-1 [&>span]:truncate [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0',
-        { 'flex h-9 w-9 shrink-0 items-center justify-center p-0 [&>span]:w-auto [&>svg]:hidden': isCollapsed },
-      )"
-    >
-      <SelectValue placeholder="Select an account" v-if="selectedIndexData">
-        <div class="flex items-center gap-3">
-          <span v-if="!isCollapsed">
-            {{ selectedIndexData!.uid }}
-          </span>
-        </div>
-      </SelectValue>
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem v-for="index of indexes" :key="index.uid" :value="index.uid">
-        <div class="flex items-center gap-3 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-foreground">
-          {{ index.uid }}
-        </div>
-      </SelectItem>
-    </SelectContent>
-  </Select>
+  <div class="flex w-full flex-row items-center justify-between rounded-md border px-0.5 py-0">
+    <p class="text-sm font-medium leading-none">
+      <span class="mr-2 rounded-lg bg-primary px-2 py-1 text-xs text-primary-foreground " v-if="selectedIndex">
+        {{ selectedIndex?.uid }}
+      </span>
+      <span class="text-xs text-muted-foreground">
+        {{ selectedIndex?.count }}
+      </span>
+    </p>
+    <DropdownMenu v-model:open="open">
+      <DropdownMenuTrigger as-child>
+        <Button variant="ghost" size="sm">
+          <MoreHorizontal />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" side="right" class="w-[200px]">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Tags class="mr-2 h-4 w-4" />
+              Select Index
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent class="p-0">
+              <Command>
+                <CommandInput
+                  placeholder="Filter label..."
+                  auto-focus
+                />
+                <CommandList>
+                  <CommandEmpty>No label found.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem
+                      v-for="index in props.indexes"
+                      :key="index.uid"
+                      :value="index"
+                      @select="(ev) => {
+                        selectedIndex = index
+                        open = false
+                      }"
+                    >
+                      {{ index.uid }}
+                    </CommandItem>
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem style="color: #d10065" @click="refresh">
+            <RotateCw class="mr-2 h-4 w-4" />
+            Refresh
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  </div>
 </template>

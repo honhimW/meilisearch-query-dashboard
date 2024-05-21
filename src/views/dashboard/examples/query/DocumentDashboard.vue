@@ -11,7 +11,7 @@ import type { MultiSearchQuery, SearchParams } from 'meilisearch/src/types/types
 import { type Hit, MeiliSearchError, type MultiSearchResult, type Settings } from 'meilisearch'
 import { RotateCw, ArrowLeftToLine } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
-import { getQuery } from '@/stores/app'
+import { getQuery, updateQueries } from '@/stores/app'
 import { useToast } from '@/components/ui/toast'
 import {
   DocumentDisplay,
@@ -40,11 +40,7 @@ const props = withDefaults(defineProps<MailProps>(), {
   defaultLayout: () => [15, 85, 85]
 })
 
-onMounted(() => {
-  refreshIndexes()
-})
-
-const refreshIndexes = () => {
+const refreshIndexes = (hook: () => void) => {
   window.msClient?.getIndexes({
     offset: 0,
     limit: 2 << 16
@@ -59,7 +55,10 @@ const refreshIndexes = () => {
         settings: undefined
       }
       indexes.value.push(item)
-      index.getStats().then(stats => item.count = stats.numberOfDocuments.toString())
+      index.getStats().then(stats => {
+        item.count = stats.numberOfDocuments.toString()
+        hook()
+      })
       index.getSettings().then(settings => item.settings = settings)
     })
   })
@@ -71,10 +70,8 @@ const isCollapsed = ref(props.defaultCollapsed)
 
 const spreadDocument = ref(false)
 const spreadScreen = ref(true)
-const selectedIndex = ref<string | undefined>(indexes?.value[0]?.uid)
 
 const searchValue = ref('')
-const debouncedSearch = refDebounced(searchValue, 250)
 
 const mDocumentList = ref<MDocument[]>([])
 
@@ -232,8 +229,25 @@ const screenAttributes = ref<ScreenProps>({
   unselected: []
 })
 
+onMounted(() => {
+  let selectedStr = getQuery('_selected')
+  if (selectedStr && selectedStr != '') {
+    selectedStr.split(',').forEach(value => {
+      screenKeys.value.push(value)
+      screenAttributes.value.selected.push({
+        title: value,
+        icon: '',
+        variant: 'ghost',
+      })
+    })
+  }
+})
+
 function updateAttributes(props: ScreenProps) {
   screenAttributes.value = props
+  let _selected = screenAttributes.value.selected
+  let selectedStr = _selected.map(value => value.title).join(',')
+  updateQueries('_selected', oldValue => selectedStr)
 }
 
 function onCollapse() {
@@ -249,7 +263,6 @@ const rotate = (event: any) => {
   setTimeout(() => {
     event.target.classList.remove('rotate-animation')
   }, 1000)
-  refreshIndexes()
 }
 
 </script>
@@ -278,10 +291,8 @@ const rotate = (event: any) => {
         <IndexSwitcher
           :is-collapsed="isCollapsed"
           :indexes="indexes"
-          @update:index="payload => {selectedIndex = payload}" />
-        <Button variant="ghost" size="icon" @click="rotate">
-          <RotateCw class="size-4" />
-        </Button>
+          @refresh:indexes="refreshIndexes"
+        />
       </div>
       <Separator />
       <Screen
@@ -290,7 +301,7 @@ const rotate = (event: any) => {
         @updateFields="updateAttributes"
       />
     </ResizablePanel>
-    <ResizableHandle id="resize-handle-1" with-handle />
+    <ResizableHandle v-show="spreadScreen" id="resize-handle-1" with-handle />
     <ResizablePanel id="resize-panel-2" :default-size="defaultLayout[1]" :min-size="30">
       <Tabs default-value="all">
         <div class="p-2">
@@ -337,7 +348,7 @@ const rotate = (event: any) => {
         </TabsContent>
       </Tabs>
     </ResizablePanel>
-    <ResizableHandle id="resiz-handle-2" with-handle />
+    <ResizableHandle v-if="spreadDocument" id="resiz-handle-2" with-handle />
     <ResizablePanel v-if="spreadDocument" id="resize-panel-3" :default-size="defaultLayout[2]">
       <DocumentDisplay :doc="selectedDocumentData" @close-display="spreadDocument = false" />
     </ResizablePanel>
