@@ -5,6 +5,10 @@
  </h1>
 </p>
 
+### Preview
+
+![/Query](./misc/screenshot_2.png "Dashboard")
+
 ## Simple Query DSL (Antlr4)
 
 [See MsDsl.g4 here.](./antlr4/MsDsl.g4)
@@ -21,7 +25,7 @@
 * like: CONTAINS('%any%') | STARTS WITH('%any') | ENDS WITH('any%') in (prototype-contains-starts-ends-with-filters-0)
 
 ```html
-#<attribute_name> : <operator> <value>
+#<attribute> : <operator> <value>
 ```
 
 ---
@@ -32,14 +36,14 @@
 * \- : DESC
 
 ```html
-@sort : <+|-> <attribute_name>
+@sort : <+|-> <attribute>
 ```
 
 ---
 ### Search on
 
 ```html
-@on : <attribute_name>
+@on : <attribute>
 ```
 
 ## Example
@@ -66,5 +70,3 @@ Rendered Search params:
 //  ...
 }
 ```
----
-![/Query](./misc/screenshot_1.png "Dashboard")
