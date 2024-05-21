@@ -9,18 +9,18 @@ import type { Settings } from 'meilisearch'
 import { i } from 'vite/dist/node/types.d-aGj9QkWt'
 
 export const allSuggestions = (model: monaco.editor.ITextModel, position: monaco.Position, settings?: Settings): CompletionItem[] => {
-  let lineContent = model.getLineContent(1)
-  let parsed = parse2SearchParam(lineContent)
+  const lineContent = model.getLineContent(1)
+  const parsed = parse2SearchParam(lineContent)
 
-  let tokenStream = parsed.tokenStream
+  const tokenStream = parsed.tokenStream
 
-  let items: CompletionItem[] = []
-  let column = position.column - 1
+  const items: CompletionItem[] = []
+  const column = position.column - 1
   let preToken: Token
   let currentToken: Token
   let tokenIndex = tokenStream.size
   for (let i = tokenStream.size - 1; i >= 0; i--) {
-    let token = tokenStream.get(i)
+    const token = tokenStream.get(i)
     tokenIndex = i
     if (token.type != -1) {
       if (token.start <= column && column <= token.stop) {
@@ -33,7 +33,7 @@ export const allSuggestions = (model: monaco.editor.ITextModel, position: monaco
     }
   }
 
-  let positionColumn = position.column
+  const positionColumn = position.column
 
   if (preToken) {
     let preTokenIndex = preToken.tokenIndex
@@ -60,14 +60,14 @@ export const allSuggestions = (model: monaco.editor.ITextModel, position: monaco
       currentTokenType = MsDslLexer.symbolicNames[currentToken.type]
     }
 
-    let completionItems = resolveByPreTokens(tokenStream, preTokenIndex, [], position, settings)
+    const completionItems = resolveByPreTokens(tokenStream, preTokenIndex, [], position, settings)
     if (completionItems) {
       completionItems
         .filter(item => {
           if (currentToken && (currentTokenType == 'STRING' || currentTokenType == 'IDENTIFIER')) {
-            let startOffset = currentTokenType == 'STRING' ? currentToken.start + 1 : currentToken.start
-            let text = currentToken.getInputStream().getText(startOffset, (positionColumn - 1) - 1)
-            let b = item.insertText.startsWith(text)
+            const startOffset = currentTokenType == 'STRING' ? currentToken.start + 1 : currentToken.start
+            const text = currentToken.getInputStream().getText(startOffset, (positionColumn - 1) - 1)
+            const b = item.insertText.startsWith(text)
             if (b) {
               item.range.startColumn = positionColumn - text.length
               item.range.endColumn = (currentToken.stop + 1) + 1
@@ -75,8 +75,8 @@ export const allSuggestions = (model: monaco.editor.ITextModel, position: monaco
             return b
           } else {
             if (currentToken) {
-              let text = currentToken.getInputStream().getText(currentToken.start, (positionColumn - 1) - 1)
-              let b = item.insertText.startsWith(text)
+              const text = currentToken.getInputStream().getText(currentToken.start, (positionColumn - 1) - 1)
+              const b = item.insertText.startsWith(text)
               if (b) {
                 item.range.startColumn = positionColumn - text.length
                 item.range.endColumn = (currentToken.stop + 1) + 1
@@ -150,7 +150,7 @@ const resolveByPreTokens = (tokenStream: TokenStream, prevIndex: number, tokens:
   if (prevIndex < 0) {
     return undefined
   }
-  let prevToken = tokenStream.get(prevIndex)
+  const prevToken = tokenStream.get(prevIndex)
   let prevTokenType = MsDslLexer.symbolicNames[prevToken.type]
   if (!prevTokenType) {
     prevTokenType = MsDslLexer.literalNames[prevToken.type]
@@ -172,7 +172,7 @@ const resolveByPreTokens = (tokenStream: TokenStream, prevIndex: number, tokens:
     case 'HASH':
       break
   }
-  let items: CompletionItem[] = []
+  const items: CompletionItem[] = []
   if (isTokens(tokens, 'AT_SORT') || isTokens(tokens, 'AT_ON')) {
     items.push({
       kind: CompletionItemKind.Operator,
@@ -295,7 +295,7 @@ const resolveByPreTokens = (tokenStream: TokenStream, prevIndex: number, tokens:
       )
     })
   } else if (isTokens(tokens, 'HASH', 'IDENTIFIER', '\':\'') || isTokens(tokens, 'STRING', '\':\'')) {
-    let symbols = ['=', '!=', '>', '>=', '<', '<=', 'like']
+    const symbols = ['=', '!=', '>', '>=', '<', '<=', 'like']
     symbols.map(symbol => {
       return {
         kind: CompletionItemKind.Operator,

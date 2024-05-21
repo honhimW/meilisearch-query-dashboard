@@ -2,8 +2,8 @@
 import type { SearchParams } from 'meilisearch/src/types/types'
 import MonacoEditor from '@/views/dashboard/examples/query/MonacoEditor.vue'
 import * as monaco from 'monaco-editor'
-import { type CancellationToken, editor } from 'monaco-editor'
-import { onMounted, ref, watch } from 'vue'
+import { type CancellationToken, editor, languages, MarkerSeverity } from 'monaco-editor'
+import { computed, onMounted, ref, watch } from 'vue'
 import { getQuery, ThemeChangeEvent, updateQueries } from '@/stores/app'
 import { useMagicKeys } from '@vueuse/core'
 import { allSuggestions } from '@/views/dashboard/examples/query/dsl/suggestions'
@@ -12,6 +12,10 @@ import type { MsDslError } from '@/lib/MsDslErrorListener'
 import { MsDslTokenProvider } from '@/views/dashboard/examples/query/dsl/MsDslTokenProvider'
 import type { IndexHolder } from '@/views/dashboard/examples/query/DocumentDashboard.vue'
 import type { Settings } from 'meilisearch'
+import { SearchCheck, SearchX } from 'lucide-vue-next'
+import { Button } from '@/components/ui/button'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
+import CompletionItemKind = languages.CompletionItemKind
 
 const props = defineProps<{
   indexes?: IndexHolder[]
@@ -21,7 +25,9 @@ const emits = defineEmits<{
 }>()
 
 const searchStr = ref<string>('')
+const searchParamsRef = ref<SearchParams | undefined>()
 const editorRef = ref<monaco.editor.IStandaloneCodeEditor>()
+const markersRef = ref<editor.IMarkerData[]>()
 
 const keys = useMagicKeys({
   passive: false,
@@ -61,6 +67,11 @@ const emitSearch = () => {
   }
 }
 
+const performSearch = () => {
+  updateQueries('q', o => searchStr.value)
+  emitSearch()
+}
+
 const customizeEditor = (editor: monaco.editor.IStandaloneCodeEditor) => {
   editorRef.value = editor
   editor.addAction({
@@ -70,8 +81,7 @@ const customizeEditor = (editor: monaco.editor.IStandaloneCodeEditor) => {
       monaco.KeyCode.Enter
     ],
     run(editor: editor.ICodeEditor, ...args: any[]): void | Promise<void> {
-      updateQueries('q', o => searchStr.value)
-      emitSearch()
+      performSearch()
     }
   })
   editor.addAction({
@@ -109,7 +119,7 @@ const customizeEditor = (editor: monaco.editor.IStandaloneCodeEditor) => {
 
 const updateMarker = () => {
   let { sp, le, pe, settingErrors } = parse2SearchParam(searchStr.value, getSetting())
-
+  searchParamsRef.value = sp
   let errors: MsDslError[] = []
   if (le.length > 0) {
     le.forEach((error) => errors.push(error))
@@ -142,6 +152,7 @@ const updateMarker = () => {
       })
     })
   }
+  markersRef.value = markers
   monaco.editor.setModelMarkers(editorRef.value?.getModel() as editor.ITextModel, 'msDSL', markers)
 }
 
@@ -166,6 +177,32 @@ const options: editor.IEditorOptions = {
     enabled: false
   },
   readOnly: false,
+  automaticLayout: true,
+  foldingStrategy: 'indentation',
+  renderLineHighlight: 'line',
+  selectOnLineNumbers: false,
+  scrollBeyondLastLine: false,
+  overviewRulerBorder: false,
+  autoClosingQuotes: 'always'
+}
+
+const jsonCardOptions: editor.IEditorOptions = {
+  fontSize: 11,
+  fontWeight: '500',
+  // lineHeight: 36,
+  fontFamily: 'sans-serif',
+  wordWrap: 'on',
+  lineNumbers: 'off',
+  scrollbar: {
+    vertical: 'hidden',
+    horizontal: 'hidden'
+  },
+  cursorStyle: 'line',
+  contextmenu: false,
+  minimap: {
+    enabled: false
+  },
+  readOnly: true,
   automaticLayout: true,
   foldingStrategy: 'indentation',
   renderLineHighlight: 'line',
@@ -210,27 +247,11 @@ const configDSL = () => {
 
   monaco.languages.registerCompletionItemProvider(msDSL, {
     provideCompletionItems(model: monaco.editor.ITextModel, position: monaco.Position, context: monaco.languages.CompletionContext, token: CancellationToken): monaco.languages.ProviderResult<monaco.languages.CompletionList> {
-      let contentBeforeCursor = model.getValueInRange({
-        startColumn: 1,
-        endColumn: position.column,
-        startLineNumber: 1,
-        endLineNumber: 1
-      })
 
+      let items = allSuggestions(model, position, getSetting())
       return {
-        suggestions: allSuggestions(model, position, getSetting())
+        suggestions: items
       }
-      // if (contentBeforeCursor == '') {
-      // }
-      //
-      // let currentContent = contentBeforeCursor
-      // if (contentBeforeCursor.lastIndexOf(' ') != -1 || contentBeforeCursor.lastIndexOf('\t') != -1) {
-      //   let breakTokenIndex = Math.max(contentBeforeCursor.lastIndexOf(' '), contentBeforeCursor.lastIndexOf('\t'))
-      //   currentContent = contentBeforeCursor.substring(breakTokenIndex + 1, contentBeforeCursor.length)
-      // }
-      // return {
-      //   suggestions: allSuggestions(model, position, currentContent)
-      // }
     }
   })
 }
@@ -248,17 +269,47 @@ const toMonacoTheme = (themeMode: string) => {
 }
 
 const monacoTheme = ref<string>(toMonacoTheme(localStorage.getItem('themeMode') as string))
+
+const hasDslError = computed(oldValue => {
+  if (markersRef.value) {
+    return markersRef.value?.some(value => value.severity == MarkerSeverity.Error)
+  } else {
+    return false
+  }
+})
+
+const showCard = computed(oldValue => {
+  return (searchStr.value?.length ?? 0) > 0 && searchParamsRef
+})
+
 </script>
 
 <template>
-
+  <HoverCard>
+    <HoverCardTrigger as-child >
+      <Button variant="outline" class="border-0 p-[6px] w-8 h-8" @click="performSearch">
+        <SearchCheck v-if="!hasDslError"
+                     class="transition-all duration-500" />
+        <SearchX v-else
+                 class="transition-all duration-500" />
+      </Button>
+    </HoverCardTrigger>
+    <HoverCardContent class="w-96 h-80" v-if="showCard">
+      <MonacoEditor
+        :theme="monacoTheme"
+        :model-value="JSON.stringify(searchParamsRef, null, 2)"
+        :options="jsonCardOptions"
+        language="json"
+      />
+    </HoverCardContent>
+  </HoverCard>
   <MonacoEditor
     :theme="monacoTheme"
     :model-value="searchStr"
     style="height: 40px"
     :options="options"
     language="msDSL"
-    placeHolder="⌘ K, Tips: q: ..., sort: @sort:+|-..., filter: #...:?..., on: @on:..."
+    placeHolder="⌘ K, Tips: q: _, sort: @sort:+|-_, filter: #_:?_, on: @on:_"
     @editor-mounted="customizeEditor"
     @update:model-value="updateSearchStr"
   />

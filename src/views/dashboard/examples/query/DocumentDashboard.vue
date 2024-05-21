@@ -9,7 +9,12 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import type { MDocument } from '@/views/dashboard/examples/query/DocumentList.vue'
 import type { MultiSearchQuery, SearchParams } from 'meilisearch/src/types/types'
 import { type Hit, MeiliSearchError, type MultiSearchResult, type Settings } from 'meilisearch'
-import { RotateCw, ArrowLeftToLine } from 'lucide-vue-next'
+import {
+  RotateCw,
+  ArrowLeftToLine,
+  SearchCheck,
+  SearchX,
+} from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { getQuery, updateQueries } from '@/stores/app'
 import { useToast } from '@/components/ui/toast'

@@ -48,13 +48,11 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
     facets: [],
     highlightPreTag: '<ais-hl-msq-t style="background-color: #ff5895; font-weight: bold">',
     highlightPostTag: '</ais-hl-msq-t>',
-    limit: 20,
-    offset: 0,
     filter: filters,
     sort: sorts
   }
 
-  if (useAppStore().serverVersion > '1.3') {
+  if (useAppStore().serverVersion >= '1.3') {
     searchParams.showRankingScore = true
     searchParams.attributesToSearchOn = ['*']
   }
@@ -87,7 +85,7 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
             settingErrors.push({
               line: 1,
               startColumn: token.start + 1,
-              endColumn: token.stop + 1,
+              endColumn: (token.stop + 1) + 1,
               message: `[${keyText}] is not a filterable attribute.`
             })
           }
@@ -122,7 +120,7 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
           settingErrors.push({
             line: 1,
             startColumn: token.start + 1,
-            endColumn: token.stop + 1,
+            endColumn: (token.stop + 1) + 1,
             message: `[${keyText}] is not a sortable attribute.`
           })
         }
@@ -140,12 +138,21 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
           settingErrors.push({
             line: 1,
             startColumn: token.start + 1,
-            endColumn: token.stop + 1,
+            endColumn: (token.stop + 1) + 1,
             message: `[${key}] is not a searchable attribute.`
           })
         }
         ons.push(key)
-        searchParams.attributesToSearchOn = ons
+        if (useAppStore().serverVersion >= '1.3') {
+          searchParams.attributesToSearchOn = ons
+        } else {
+          settingErrors.push({
+            line: 1,
+            startColumn: onContentContext.start.start + 1,
+            endColumn: ((onContentContext.stop?.stop ?? onContentContext.start.start) + 1) + 1,
+            message: `searchable attribute is not support in [${useAppStore().serverVersion}].`
+          })
+        }
       } else if (cc.queryContent()) {
         const queryContentContext = cc.queryContent()
         const query = getQuery(queryContentContext)
