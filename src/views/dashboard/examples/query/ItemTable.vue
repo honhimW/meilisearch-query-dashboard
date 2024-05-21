@@ -40,15 +40,15 @@ interface IData {
 }
 
 const InnerHTMLComponent = defineComponent({
-  props: ['html'],
+  props: ['html','type'],
   render() {
-    return h('div', { innerHTML: this.html })
+    return h(this.type ?? 'div', { innerHTML: this.html })
   }
 })
 
 const resolveMedia = (raw: any) => {
   if (typeof raw == 'string' && raw.indexOf('</aishl-msq-t>') != -1) {
-    return h(InnerHTMLComponent, { class: ' font-medium source', style: 'word-break: break-word;', html: raw })
+    return h(InnerHTMLComponent, { class: ' font-medium source', style: 'word-break: break-word; white-space: pre-wrap', type: 'pre', html: raw })
   }
 
   let imgRegex = /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp|svg|psd|bmp|tif)$/i
@@ -66,7 +66,7 @@ const resolveMedia = (raw: any) => {
   } else if (link.test(url)) {
     return h('a', { href: url }, url)
   } else {
-    return h(InnerHTMLComponent, { class: ' font-medium source', style: 'word-break: break-word;', html: raw })
+    return h(InnerHTMLComponent, { class: ' font-medium source', style: 'word-break: break-word; white-space: pre-wrap', type: 'pre', html: raw })
   }
 }
 
@@ -74,7 +74,8 @@ const columns: ColumnDef<IData>[] = [
   {
     accessorKey: 'key',
     header: 'KEY',
-    enableSorting: false
+    enableSorting: false,
+    cell: ({ row }) => h('pre', {}, row.original.key),
   },
   {
     accessorKey: 'value',

@@ -122,7 +122,6 @@ export default defineComponent({
     watch(
       () => props.options,
       newValue => {
-        console.log(newValue)
         editor.updateOptions({
 
         })

@@ -77,7 +77,9 @@ const editable = (flag: boolean) => {
   })
 }
 
-const monacoEditorValue = ref<string>(JSON.stringify(props.doc?.hit, null, 2))
+const monacoEditorValue = computed<string>(oldValue => {
+  return JSON.stringify(props.doc?.hit, null, 2)
+})
 
 const saveDocument = () => {
   if (props.doc?.indexUid) {

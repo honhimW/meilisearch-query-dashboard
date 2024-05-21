@@ -307,7 +307,7 @@ const rotate = (event: any) => {
       />
     </ResizablePanel>
     <ResizableHandle v-show="spreadScreen" id="resize-handle-1" with-handle />
-    <ResizablePanel id="resize-panel-2" :default-size="defaultLayout[1]" :min-size="30">
+    <ResizablePanel id="resize-panel-2" :default-size="defaultLayout[1]" :min-size="20">
       <Tabs default-value="all">
         <div class="p-2">
           <div class="relative flex">
