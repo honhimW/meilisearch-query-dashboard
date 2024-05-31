@@ -38,6 +38,8 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Build
+        env:
+          BASEPATH: '/meilisearch-query-dashboard'
         run: npm run build-only
       - name: Setup Pages
         uses: actions/configure-pages@v5
