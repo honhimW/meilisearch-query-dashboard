@@ -73,13 +73,13 @@ const resolveMedia = (raw: any) => {
 const columns: ColumnDef<IData>[] = [
   {
     accessorKey: 'key',
-    header: 'KEY',
+    header: () => h('b', {}, 'Key'),
     enableSorting: false,
-    cell: ({ row }) => h('pre', {}, row.original.key),
+    cell: ({ row }) => h('pre', {style: 'font-weight: bolder;'}, row.original.key),
   },
   {
     accessorKey: 'value',
-    header: 'VALUE',
+    header: () => h('b', {}, 'Value'),
     cell: ({ row }) => h('div', {
       class: 'flex items-center',
       style: 'width: 100%; height: 100%'

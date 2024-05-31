@@ -97,6 +97,11 @@ const searchLimit = () => {
   return Number(getQuery('limit') ?? '20')
 }
 
+const currentIndex = computed<IndexHolder | undefined>(oldValue => {
+  let index = getQuery('_index')
+  return indexes.value.find(value => value.uid == index)
+})
+
 const search = (query?: SearchParams | string, page = 0) => {
   latestQuery.value = query
   latestPage.value = page
@@ -155,13 +160,6 @@ const search = (query?: SearchParams | string, page = 0) => {
 
 }
 
-interface IndexInfo {
-  pk: string
-  setting: Settings
-}
-
-const indexInfo: Record<string, string> = {}
-
 const flattenObject = (obj: any, parentKey = '', result = {} as Record<string, any>) => {
   for (let key in obj) {
     let newKey = parentKey ? `${parentKey}.${key}` : `${key}`
@@ -217,7 +215,7 @@ const renderList = (results: Array<MultiSearchResult<Record<string, any>>>, merg
       }
       mergeResults.push({
         indexUid,
-        id: indexInfo[indexUid],
+        id: currentIndex.value?.primaryKey ? _doc[currentIndex.value?.primaryKey] : undefined,
         doc: _doc,
         hit,
         attributes: screenAttributes.value

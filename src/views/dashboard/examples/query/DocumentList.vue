@@ -51,9 +51,9 @@ const onSelectedDocument = (item: MDocument) => {
             @click="onSelectedDocument(item)"
           >
             <div class="flex w-full flex-col gap-1">
-              <div class="text-xs font-medium">
-                {{ item.id }}
-              </div>
+<!--              <div class="text-xs font-medium">-->
+<!--                {{ item.id }}-->
+<!--              </div>-->
               <ListItem :row="item.doc" :attributes="item.attributes"></ListItem>
             </div>
           </div>

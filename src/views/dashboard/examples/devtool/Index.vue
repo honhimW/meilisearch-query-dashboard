@@ -37,26 +37,11 @@ const options: editor.IEditorOptions = {
   autoClosingQuotes: 'always'
 }
 
-const settingSchemaRef = ref()
-
 const customizeEditor = (editor: monaco.editor.IStandaloneCodeEditor) => {
-  monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
-    validate: true,
-    allowComments: true,
-    schemas: [{
-      uri: 'settings',
-      fileMatch: [],
-      schema: {
-
-      }
-    }]
-  })
-  let iTextModel = monaco.editor.createModel('', '', monaco.Uri.parse('inmemory://settings.schema'))
-  editor.setModel(iTextModel)
 }
 
 onMounted(() => {
-
+  
 })
 
 </script>
@@ -67,7 +52,7 @@ onMounted(() => {
     <MonacoEditor
       :theme="monacoTheme"
       :model-value="monacoEditorValue"
-      language="json"
+      language="javascript"
       :options="options"
       @update:model-value="args => monacoEditorValue = args"
       @editor-mounted="customizeEditor"

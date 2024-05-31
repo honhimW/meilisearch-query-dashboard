@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     root: rootDir,
-    base: '/',
+    base: env.BASEPATH ?? '/',
     publicDir: path.resolve(rootDir, '..', 'public'),
     appType: 'spa',
     plugins: [

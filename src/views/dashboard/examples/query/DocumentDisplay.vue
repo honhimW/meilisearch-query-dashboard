@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Archive, ArchiveX, Braces, Clock, CodeXml, PanelRightClose, Trash2 } from 'lucide-vue-next'
-import { computed, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref } from 'vue'
 import addDays from 'date-fns/addDays'
 import addHours from 'date-fns/addHours'
 import format from 'date-fns/format'
@@ -71,6 +71,10 @@ const updateOptions = (options: IEditorOptions) => {
 }
 
 const editable = (flag: boolean) => {
+  let position = []
+  for (let i = 0; i < position.length; i++) {
+
+  }
   let readOnly = !flag
   updateOptions({
     readOnly: readOnly
@@ -115,6 +119,26 @@ const saveDocument = () => {
   }
 }
 
+const deleteDocument = () => {
+  if (props.doc?.indexUid && props.doc?.id) {
+    window.msClient.index(props.doc.indexUid).deleteDocument(props.doc.id).then(value => {
+      useToast().toast({
+        class: cn(
+          'right-0 bottom-0 flex fixed md:max-w-[420px] md:right-4 md:bottom-4'
+        ),
+        variant: 'warning',
+        title: 'Delete document!',
+        description: h('div', {}, [
+          h('pre', {}, `taskUid:  ${value.taskUid.toString()}`),
+          h('pre', {}, `indexUid: ${props.doc?.indexUid}`),
+          h('pre', {}, `docId:    ${props.doc?.id}`),
+        ]),
+        duration: 4000,
+      })
+    })
+  }
+}
+
 </script>
 
 <template>
@@ -142,12 +166,20 @@ const saveDocument = () => {
 <!--          </Tooltip>-->
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button variant="ghost" size="icon" :disabled="!doc">
+              <Button variant="ghost" size="icon" :disabled="!doc" @click="deleteDocument">
                 <Trash2 class="size-4" />
-                <span class="sr-only">Move to trash</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Move to trash</TooltipContent>
+            <TooltipContent>Delete</TooltipContent>
+          </Tooltip>
+          <Separator orientation="vertical" class="mx-1 h-6" />
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button variant="ghost" size="icon" :disabled="!doc" @click="deleteDocument">
+                <Trash2 class="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Delete</TooltipContent>
           </Tooltip>
           <Separator orientation="vertical" class="mx-1 h-6" />
           <Tooltip>
