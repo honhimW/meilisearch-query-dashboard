@@ -45,6 +45,10 @@ export const editorProps = {
     type: String as PropType<string>,
     default: '',
   },
+  fileUri: {
+    type: String as PropType<string>,
+    default: null,
+  },
   options: {
     type: Object as PropType<editor.IEditorOptions>,
     default: function () {

@@ -41,6 +41,7 @@ import { type TasksQuery } from 'meilisearch/src/types'
 import type { LocationQueryValue } from 'vue-router'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from 'date-fns'
+import type { FormatOptions } from 'date-fns/format'
 
 interface ITableData extends Task {
 
@@ -57,11 +58,16 @@ const tagVariants: Record<string, string> = {
 onMounted(() => {
   let query = router.currentRoute.value.query
   let taskQuery: TasksQuery = {}
-  if (query['indexUids']) {
-    taskQuery.indexUids = query['indexUids'] as string[]
+  if (query['indexUid']) {
+    let queryElement = query['indexUid']
+    if (typeof queryElement == 'string') {
+      taskQuery.indexUids = [queryElement]
+    } else {
+      taskQuery.indexUids = (queryElement as LocationQueryValue[]).map(value => value as string)
+    }
   }
-  if (query['uids']) {
-    let queryElement = query['uids']
+  if (query['uid']) {
+    let queryElement = query['uid']
     if (typeof queryElement == 'string') {
       taskQuery.uids = [Number(queryElement as string)]
     } else {
@@ -173,7 +179,7 @@ const columns: ColumnDef<ITableData>[] = [
   {
     accessorKey: 'finishedAt',
     header: 'Finished At',
-    cell: ({ row }) => h('span', { class: 'max-w-[500px] truncate font-medium' }, formatDate(row.original.finishedAt, 'yyyy-MM-dd HH:mm:ss.SSS'))
+    cell: ({ row }) => h('span', { class: 'max-w-[500px] truncate font-medium' }, _formatDate(row.original.finishedAt, 'yyyy-MM-dd HH:mm:ss.SSS'))
   },
   {
     accessorKey: 'canceledBy',
@@ -201,13 +207,13 @@ const columns: ColumnDef<ITableData>[] = [
     accessorKey: 'startedAt',
     header: 'Started At',
     enableHiding: true,
-    cell: ({ row }) => h('span', { class: 'max-w-[500px] truncate font-medium' }, formatDate(row.original.startedAt, 'yyyy-MM-dd HH:mm:ss.SSS'))
+    cell: ({ row }) => h('span', { class: 'max-w-[500px] truncate font-medium' }, _formatDate(row.original.startedAt, 'yyyy-MM-dd HH:mm:ss.SSS'))
   },
   {
     accessorKey: 'enqueuedAt',
     header: 'Enqueued At',
     enableHiding: true,
-    cell: ({ row }) => h('span', { class: 'max-w-[500px] truncate font-medium' }, formatDate(row.original.enqueuedAt, 'yyyy-MM-dd HH:mm:ss.SSS'))
+    cell: ({ row }) => h('span', { class: 'max-w-[500px] truncate font-medium' }, _formatDate(row.original.enqueuedAt, 'yyyy-MM-dd HH:mm:ss.SSS'))
   },
   {
     id: 'actions',
@@ -230,6 +236,23 @@ const columns: ColumnDef<ITableData>[] = [
     }
   },
 ]
+
+function _formatDate<DateType extends Date> (
+  date: DateType | number | string,
+  formatStr: string,
+  options?: FormatOptions
+) {
+  if (date) {
+    if (typeof date == 'object') {
+      if (date.getTime() == 0) {
+        return 'N/A'
+      }
+    }
+    return formatDate(date, formatStr, options)
+  } else {
+    return 'N/A'
+  }
+}
 
 const filterValue = ref<string>('')
 

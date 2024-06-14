@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { refDebounced } from '@vueuse/core'
 import { type Attribute, type ScreenProps } from './Screen.vue'
-import { cn } from '@/lib/utils'
+import { cn, formattedCount } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
@@ -13,7 +13,7 @@ import {
   RotateCw,
   ArrowLeftToLine,
   SearchCheck,
-  SearchX,
+  SearchX
 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { getQuery, updateQueries } from '@/stores/app'
@@ -23,7 +23,7 @@ import {
   MultiSearchPopover,
   IndexSwitcher,
   DocumentList,
-  Screen,
+  Screen
 } from './'
 import { MeiliSearchCommunicationError } from 'meilisearch/src/errors/meilisearch-communication-error'
 import Icon from '@/components/ui/Icon.vue'
@@ -61,7 +61,7 @@ const refreshIndexes = (hook: () => void) => {
       }
       indexes.value.push(item)
       index.getStats().then(stats => {
-        item.count = stats.numberOfDocuments.toString()
+        item.count = formattedCount(stats.numberOfDocuments, 1)
         hook()
       })
       index.getSettings().then(settings => item.settings = settings)
@@ -103,6 +103,68 @@ const currentIndex = computed<IndexHolder | undefined>(oldValue => {
 })
 
 const search = (query?: SearchParams | string, page = 0) => {
+  usingSingleSearch(query, page)
+  // usingMultiSearch(query, page)
+}
+
+const usingSingleSearch = (query?: SearchParams | string, page = 0) => {
+  latestQuery.value = query
+  latestPage.value = page
+
+  let _limit = searchLimit()
+  let offset = _limit * page
+  let limit = _limit * (page + 1)
+
+  if (page == 0) {
+    results.value.length = 0
+    mergeResults.value.length = 0
+  }
+  let index = getQuery('_index')
+  if (index) {
+    let _searchQuery: SearchParams
+    if (typeof query == 'string') {
+      _searchQuery = {
+        q: query,
+        attributesToHighlight: ['*'],
+        facets: [],
+        highlightPreTag: '<ais-hl-msq-t style="background-color: #ff5895; font-weight: bold">',
+        highlightPostTag: '</ais-hl-msq-t>',
+        limit: limit,
+        offset: offset
+      }
+    } else {
+      _searchQuery = {
+        ...query as SearchParams,
+        limit: limit,
+        offset: offset
+      }
+    }
+    window.msClient.index(index).search(null, _searchQuery)
+      .then(value => {
+        let results = [{
+          ...value,
+          indexUid: index,
+        }]
+        estimatedTotalHits.value = results[0].estimatedTotalHits ?? 0
+        processingTimeMs.value = results[0].processingTimeMs ?? 0
+        renderList(results, mergeResults.value, page == 0)
+        mDocumentList.value = mergeResults.value
+      }).catch(reason => {
+      let error = reason as MeiliSearchCommunicationError
+      useToast().toast({
+        class: cn(
+          'right-0 bottom-0 flex fixed md:max-w-[420px] md:right-4 md:bottom-4'
+        ),
+        variant: 'destructive',
+        title: `${error.code}`,
+        description: error.message,
+        duration: 4000
+      })
+    })
+  }
+}
+
+const usingMultiSearch = (query?: SearchParams | string, page = 0) => {
   latestQuery.value = query
   latestPage.value = page
 
@@ -126,14 +188,14 @@ const search = (query?: SearchParams | string, page = 0) => {
         highlightPreTag: '<ais-hl-msq-t style="background-color: #ff5895; font-weight: bold">',
         highlightPostTag: '</ais-hl-msq-t>',
         limit: limit,
-        offset: offset,
+        offset: offset
       }
     } else {
       _searchQuery = {
         ...query as SearchParams,
         indexUid: index as string,
         limit: limit,
-        offset: offset,
+        offset: offset
       }
     }
     window.msClient?.multiSearch({
@@ -153,11 +215,10 @@ const search = (query?: SearchParams | string, page = 0) => {
         variant: 'destructive',
         title: `${error.code}`,
         description: error.message,
-        duration: 4000,
+        duration: 4000
       })
     })
   }
-
 }
 
 const flattenObject = (obj: any, parentKey = '', result = {} as Record<string, any>) => {
@@ -209,7 +270,7 @@ const renderList = (results: Array<MultiSearchResult<Record<string, any>>>, merg
             a = screenAttributes.value.unselected.filter(_a => _a.title === key).at(0)
           }
           if (a) {
-            a.label = (Number(a.label) + 1).toString()
+            a.label = formattedCount((Number(a.label) + 1))
           }
         }
       }
@@ -240,7 +301,7 @@ onMounted(() => {
       screenAttributes.value.selected.push({
         title: value,
         icon: '',
-        variant: 'ghost',
+        variant: 'ghost'
       })
     })
   }

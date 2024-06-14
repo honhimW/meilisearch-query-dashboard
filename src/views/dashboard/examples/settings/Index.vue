@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import MonacoEditor from '@/views/dashboard/examples/query/MonacoEditor.vue'
-import { onMounted, ref } from 'vue'
-import { editor, type IDisposable } from 'monaco-editor'
+import { h, onMounted, ref } from 'vue'
 import * as monaco from 'monaco-editor'
-
+import { editor } from 'monaco-editor'
+import { getQuery } from '@/stores/app'
+import { Button } from '@/components/ui/button'
+import { CirclePlay } from 'lucide-vue-next'
+import { ToastAction, useToast } from '@/components/ui/toast'
+import { cn } from '@/lib/utils'
+import router from '@/router'
 
 const toMonacoTheme = (themeMode: string) => {
   return themeMode === 'dark' ? 'shacdn-ui-dark' : 'shacdn-ui-light'
@@ -37,38 +42,326 @@ const options: editor.IEditorOptions = {
   autoClosingQuotes: 'always'
 }
 
-const settingSchemaRef = ref()
+const editorRef = ref<monaco.editor.IStandaloneCodeEditor>()
 
 const customizeEditor = (editor: monaco.editor.IStandaloneCodeEditor) => {
+  editorRef.value = editor
+}
+
+onMounted(() => {
+  let indexUid = getQuery('indexUid')
+  if (indexUid) {
+    window.msClient.index(indexUid).getSettings()
+      .then(value => {
+        monacoEditorValue.value = JSON.stringify(value, null, 4)
+      }).then(value => {
+      window.msClient.index(indexUid).getStats()
+        .then(value => {
+          let fieldDistribution = value.fieldDistribution
+          let fields: string[] = []
+          for (let fieldDistributionKey in fieldDistribution) {
+            fields.push(fieldDistributionKey)
+          }
+          updateSchema(fields)
+        })
+    })
+  } else {
+    monacoEditorValue.value =
+      `{
+
+}`
+  }
+})
+
+const updateSchema = (fields = [] as string[]) => {
   monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
     validate: true,
     allowComments: true,
     schemas: [{
       uri: 'settings',
-      fileMatch: [],
+      fileMatch: ['*'],
       schema: {
-
+        type: 'object',
+        properties: {
+          filterableAttributes: {
+            type: 'array',
+            items: {
+              anyOf: [
+                {
+                  type: 'string'
+                },
+                {
+                  enum: fields.concat('*')
+                }
+              ]
+            }
+          },
+          distinctAttribute: {
+            oneOf: [
+              { type: 'string' },
+              { type: 'null' }
+            ]
+          },
+          sortableAttributes: {
+            type: 'array',
+            items: {
+              anyOf: [
+                {
+                  type: 'string'
+                },
+                {
+                  enum: fields.concat('*')
+                }
+              ]
+            }
+          },
+          searchableAttributes: {
+            type: 'array',
+            items: {
+              anyOf: [
+                {
+                  type: 'string'
+                },
+                {
+                  enum: fields.concat('*')
+                }
+              ]
+            }
+          },
+          displayedAttributes: {
+            type: 'array',
+            items: {
+              anyOf: [
+                {
+                  type: 'string'
+                },
+                {
+                  enum: fields.concat('*')
+                }
+              ]
+            }
+          },
+          rankingRules: {
+            type: 'array',
+            items: {
+              type: 'string'
+            }
+          },
+          stopWords: {
+            type: 'array',
+            items: {
+              type: 'string'
+            }
+          },
+          synonyms: {
+            type: 'object',
+            additionalProperties: {
+              type: 'array',
+              items: {
+                type: 'string'
+              }
+            }
+          },
+          typoTolerance: {
+            type: 'object',
+            properties: {
+              enabled: {
+                type: 'boolean'
+              },
+              disableOnAttributes: {
+                type: 'array',
+                items: {
+                  type: 'string'
+                }
+              },
+              disableOnWords: {
+                type: 'array',
+                items: {
+                  type: 'string'
+                }
+              },
+              minWordSizeForTypos: {
+                type: 'object',
+                properties: {
+                  oneTypo: {
+                    type: 'number'
+                  },
+                  twoTypos: {
+                    type: 'number'
+                  }
+                }
+              }
+            }
+          },
+          faceting: {
+            type: 'object',
+            properties: {
+              maxValuesPerFacet: {
+                type: 'number'
+              },
+              sortFacetValuesBy: {
+                type: 'object',
+                additionalProperties: {
+                  enum: ['alpha', 'count']
+                }
+              }
+            }
+          },
+          pagination: {
+            type: 'object',
+            properties: {
+              maxTotalHits: {
+                type: 'number'
+              }
+            }
+          },
+          separatorTokens: {
+            type: 'array',
+            items: {
+              type: 'string'
+            }
+          },
+          nonSeparatorTokens: {
+            type: 'array',
+            items: {
+              type: 'string'
+            }
+          },
+          dictionary: {
+            type: 'array',
+            items: {
+              type: 'string'
+            }
+          },
+          proximityPrecision: {
+            enum: ['byWord', 'byAttribute']
+          },
+          embedders: {
+            type: 'object',
+            additionalProperties: {
+              oneOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    source: {
+                      const: 'openAi'
+                    },
+                    model: {
+                      type: 'string'
+                    },
+                    apiKey: {
+                      type: 'string'
+                    },
+                    documentTemplate: {
+                      type: 'string'
+                    },
+                    dimensions: {
+                      type: 'number'
+                    }
+                  },
+                  required: ['source']
+                },
+                {
+                  type: 'object',
+                  properties: {
+                    source: {
+                      const: 'huggingFace'
+                    },
+                    model: {
+                      type: 'string'
+                    },
+                    revision: {
+                      type: 'string'
+                    },
+                    documentTemplate: {
+                      type: 'string'
+                    }
+                  },
+                  required: ['source']
+                },
+                {
+                  type: 'object',
+                  properties: {
+                    source: {
+                      const: 'userProvided'
+                    },
+                    dimensions: {
+                      type: 'number'
+                    }
+                  },
+                  required: ['source', 'dimensions']
+                }
+              ]
+            }
+          }
+        }
       }
     }]
   })
-  let iTextModel = monaco.editor.createModel('', '', monaco.Uri.parse('inmemory://settings.schema'))
-  editor.setModel(iTextModel)
 }
 
-onMounted(() => {
-
-})
+const updateSettings = () => {
+  let settingJson = monacoEditorValue.value
+  let indexUid = getQuery('indexUid')
+  if (indexUid) {
+    window.msClient.index(indexUid).updateSettings(JSON.parse(settingJson))
+      .then(value => {
+        useToast().toast({
+          class: cn(
+            'right-0 bottom-0 flex fixed md:max-w-[420px] md:right-4 md:bottom-4'
+          ),
+          variant: 'warning',
+          title: 'Update Settings!',
+          description: h('div', {}, [
+            h('pre', {}, `taskUid:  ${value.taskUid.toString()}`),
+            h('pre', {}, `indexUid: ${indexUid}`)
+          ]),
+          duration: 4000,
+          action: h('div', {
+            class: 'flex gap-4'
+          }, [
+            h(ToastAction, {
+              altText: 'Route',
+              onClick: () => {
+                router.push(`/dashboard/task?uid=${value.taskUid}`)
+              }
+            }, {
+              default: () => 'Details'
+            }),
+            h(ToastAction, {
+              altText: 'Cancel',
+              onClick: () => {
+                window.msClient.cancelTasks({
+                  uids: [value.taskUid]
+                })
+              }
+            }, {
+              default: () => 'Cancel'
+            })
+          ])
+        })
+      })
+  }
+}
 
 </script>
 
 <template>
   <div class="flex flex-1 flex-col h-screen">
-    <page-header>Settings</page-header>
+    <Button
+      variant="outline"
+      size="icon"
+      class="h-8 w-8 shrink-0 rounded-full"
+      @click="updateSettings"
+    >
+      <CirclePlay class="transition-all duration-500" />
+    </Button>
     <MonacoEditor
       :theme="monacoTheme"
       :model-value="monacoEditorValue"
       language="json"
       :options="options"
+      file-uri="inmemory://settings.schema"
       @update:model-value="args => monacoEditorValue = args"
       @editor-mounted="customizeEditor"
       class="max-w-[100%] max-h-[100%]"

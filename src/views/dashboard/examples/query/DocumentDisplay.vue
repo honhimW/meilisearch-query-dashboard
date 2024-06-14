@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Archive, ArchiveX, Braces, Clock, CodeXml, PanelRightClose, Trash2 } from 'lucide-vue-next'
+import { Archive, ArchiveX, Braces, Clock, CodeXml, PanelRightClose, Trash2, UnfoldVertical } from 'lucide-vue-next'
 import { computed, h, onMounted, ref } from 'vue'
 import addDays from 'date-fns/addDays'
 import addHours from 'date-fns/addHours'
@@ -22,6 +22,7 @@ import IEditorOptions = editor.IEditorOptions
 import { useToast } from '@/components/ui/toast'
 import { cn } from '@/lib/utils'
 import { MeiliSearchCommunicationError } from 'meilisearch/src/errors/meilisearch-communication-error'
+import SpreadDocumentsDrawer from '@/views/dashboard/examples/query/SpreadDocumentsDrawer.vue'
 const { toasts } = useToast()
 
 interface MailDisplayProps {
@@ -33,13 +34,6 @@ const props = defineProps<MailDisplayProps>()
 const emits = defineEmits<{
   (e: 'close-display'): void
 }>()
-
-const mailFallbackName = computed(() => {
-  return props.mail?.name
-    .split(' ')
-    .map(chunk => chunk[0])
-    .join('')
-})
 
 onMounted(() => {
   window.addEventListener('themeChange', ev => {
@@ -72,9 +66,6 @@ const updateOptions = (options: IEditorOptions) => {
 
 const editable = (flag: boolean) => {
   let position = []
-  for (let i = 0; i < position.length; i++) {
-
-  }
   let readOnly = !flag
   updateOptions({
     readOnly: readOnly
@@ -146,24 +137,6 @@ const deleteDocument = () => {
     <div class="flex h-full flex-col">
       <div class="flex items-center p-2">
         <div class="flex items-center gap-2">
-<!--          <Tooltip>-->
-<!--            <TooltipTrigger as-child>-->
-<!--              <Button variant="ghost" size="icon" :disabled="!doc">-->
-<!--                <Archive class="size-4" />-->
-<!--                <span class="sr-only">Archive</span>-->
-<!--              </Button>-->
-<!--            </TooltipTrigger>-->
-<!--            <TooltipContent>Archive</TooltipContent>-->
-<!--          </Tooltip>-->
-<!--          <Tooltip>-->
-<!--            <TooltipTrigger as-child>-->
-<!--              <Button variant="ghost" size="icon" :disabled="!doc">-->
-<!--                <ArchiveX class="size-4" />-->
-<!--                <span class="sr-only">Move to junk</span>-->
-<!--              </Button>-->
-<!--            </TooltipTrigger>-->
-<!--            <TooltipContent>Move to junk</TooltipContent>-->
-<!--          </Tooltip>-->
           <Tooltip>
             <TooltipTrigger as-child>
               <Button variant="ghost" size="icon" :disabled="!doc" @click="deleteDocument">
@@ -175,74 +148,72 @@ const deleteDocument = () => {
           <Separator orientation="vertical" class="mx-1 h-6" />
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button variant="ghost" size="icon" :disabled="!doc" @click="deleteDocument">
-                <Trash2 class="size-4" />
-              </Button>
+              <SpreadDocumentsDrawer/>
             </TooltipTrigger>
-            <TooltipContent>Delete</TooltipContent>
+            <TooltipContent>Spread</TooltipContent>
           </Tooltip>
-          <Separator orientation="vertical" class="mx-1 h-6" />
-          <Tooltip>
-            <Popover>
-              <PopoverTrigger as-child>
-                <TooltipTrigger as-child>
-                  <Button variant="ghost" size="icon" :disabled="!doc">
-                    <Clock class="size-4" />
-                    <span class="sr-only">Snooze</span>
-                  </Button>
-                </TooltipTrigger>
-              </PopoverTrigger>
-              <PopoverContent class="flex w-[535px] p-0">
-                <div class="flex flex-col gap-2 border-r px-2 py-4">
-                  <div class="px-4 text-sm font-medium">
-                    Snooze until
-                  </div>
-                  <div class="grid min-w-[250px] gap-1">
-                    <Button
-                      variant="ghost"
-                      class="justify-start font-normal"
-                    >
-                      Later today
-                      <span class="ml-auto text-muted-foreground">
-                      {{ format(addHours(today, 4), 'E, h:m b') }}
-                    </span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      class="justify-start font-normal"
-                    >
-                      Tomorrow
-                      <span class="ml-auto text-muted-foreground">
-                      {{ format(addDays(today, 1), 'E, h:m b') }}
-                    </span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      class="justify-start font-normal"
-                    >
-                      This weekend
-                      <span class="ml-auto text-muted-foreground">
-                      {{ format(nextSaturday(today), 'E, h:m b') }}
-                    </span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      class="justify-start font-normal"
-                    >
-                      Next week
-                      <span class="ml-auto text-muted-foreground">
-                      {{ format(addDays(today, 7), 'E, h:m b') }}
-                    </span>
-                    </Button>
-                  </div>
-                </div>
-                <div class="p-2">
-                  <Calendar />
-                </div>
-              </PopoverContent>
-            </Popover>
-            <TooltipContent>Snooze</TooltipContent>
-          </Tooltip>
+<!--          <Separator orientation="vertical" class="mx-1 h-6" />-->
+<!--          <Tooltip>-->
+<!--            <Popover>-->
+<!--              <PopoverTrigger as-child>-->
+<!--                <TooltipTrigger as-child>-->
+<!--                  <Button variant="ghost" size="icon" :disabled="!doc">-->
+<!--                    <Clock class="size-4" />-->
+<!--                    <span class="sr-only">Snooze</span>-->
+<!--                  </Button>-->
+<!--                </TooltipTrigger>-->
+<!--              </PopoverTrigger>-->
+<!--              <PopoverContent class="flex w-[535px] p-0">-->
+<!--                <div class="flex flex-col gap-2 border-r px-2 py-4">-->
+<!--                  <div class="px-4 text-sm font-medium">-->
+<!--                    Snooze until-->
+<!--                  </div>-->
+<!--                  <div class="grid min-w-[250px] gap-1">-->
+<!--                    <Button-->
+<!--                      variant="ghost"-->
+<!--                      class="justify-start font-normal"-->
+<!--                    >-->
+<!--                      Later today-->
+<!--                      <span class="ml-auto text-muted-foreground">-->
+<!--                      {{ format(addHours(today, 4), 'E, h:m b') }}-->
+<!--                    </span>-->
+<!--                    </Button>-->
+<!--                    <Button-->
+<!--                      variant="ghost"-->
+<!--                      class="justify-start font-normal"-->
+<!--                    >-->
+<!--                      Tomorrow-->
+<!--                      <span class="ml-auto text-muted-foreground">-->
+<!--                      {{ format(addDays(today, 1), 'E, h:m b') }}-->
+<!--                    </span>-->
+<!--                    </Button>-->
+<!--                    <Button-->
+<!--                      variant="ghost"-->
+<!--                      class="justify-start font-normal"-->
+<!--                    >-->
+<!--                      This weekend-->
+<!--                      <span class="ml-auto text-muted-foreground">-->
+<!--                      {{ format(nextSaturday(today), 'E, h:m b') }}-->
+<!--                    </span>-->
+<!--                    </Button>-->
+<!--                    <Button-->
+<!--                      variant="ghost"-->
+<!--                      class="justify-start font-normal"-->
+<!--                    >-->
+<!--                      Next week-->
+<!--                      <span class="ml-auto text-muted-foreground">-->
+<!--                      {{ format(addDays(today, 7), 'E, h:m b') }}-->
+<!--                    </span>-->
+<!--                    </Button>-->
+<!--                  </div>-->
+<!--                </div>-->
+<!--                <div class="p-2">-->
+<!--                  <Calendar />-->
+<!--                </div>-->
+<!--              </PopoverContent>-->
+<!--            </Popover>-->
+<!--            <TooltipContent>Snooze</TooltipContent>-->
+<!--          </Tooltip>-->
         </div>
         <div class="ml-auto flex items-center gap-2">
           <ToggleGroup type="single" v-model="displayType">

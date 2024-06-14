@@ -11,6 +11,7 @@ import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import * as monaco from 'monaco-editor'
 import { editor } from 'monaco-editor'
+import ITextModel = editor.ITextModel
 
 export default defineComponent({
   name: 'monacoEditor',
@@ -72,7 +73,12 @@ export default defineComponent({
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true
       })
+      let model: ITextModel | undefined = undefined
+      if (props.fileUri) {
+        model = monaco.editor.createModel(props.modelValue, props.language, monaco.Uri.parse(props.fileUri))
+      }
       editor = monaco.editor.create(codeEditBox.value, {
+        model: model,
         value: props.modelValue,
         language: props.language,
         theme: props.theme,
