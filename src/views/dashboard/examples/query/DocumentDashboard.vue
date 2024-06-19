@@ -1,32 +1,20 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
-import { refDebounced } from '@vueuse/core'
+import { useThrottleFn } from '@vueuse/core'
 import { type Attribute, type ScreenProps } from './Screen.vue'
-import { cn, formattedCount } from '@/lib/utils'
+import { cn, formattedCount, sleep } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import type { MDocument } from '@/views/dashboard/examples/query/DocumentList.vue'
 import type { MultiSearchQuery, SearchParams } from 'meilisearch/src/types/types'
-import { type Hit, MeiliSearchError, type MultiSearchResult, type Settings } from 'meilisearch'
-import {
-  RotateCw,
-  ArrowLeftToLine,
-  SearchCheck,
-  SearchX
-} from 'lucide-vue-next'
+import { type Hit, type MultiSearchResult, type Settings } from 'meilisearch'
+import { ArrowLeftToLine, LoaderCircle, CircleCheckBig } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { getQuery, updateQueries } from '@/stores/app'
 import { useToast } from '@/components/ui/toast'
-import {
-  DocumentDisplay,
-  MultiSearchPopover,
-  IndexSwitcher,
-  DocumentList,
-  Screen
-} from './'
+import { DocumentDisplay, DocumentList, IndexSwitcher, MultiSearchPopover, Screen } from './'
 import { MeiliSearchCommunicationError } from 'meilisearch/src/errors/meilisearch-communication-error'
-import Icon from '@/components/ui/Icon.vue'
 
 interface MailProps {
   defaultLayout?: number[]
@@ -79,6 +67,7 @@ const spreadScreen = ref(true)
 const searchValue = ref('')
 
 const mDocumentList = ref<MDocument[]>([])
+const searching = ref<boolean>(false)
 
 const selectedDocument = ref<MDocument | undefined>(undefined)
 
@@ -107,7 +96,9 @@ const search = (query?: SearchParams | string, page = 0) => {
   // usingMultiSearch(query, page)
 }
 
-const usingSingleSearch = (query?: SearchParams | string, page = 0) => {
+const throttleSearch = useThrottleFn(search, 200)
+
+const usingSingleSearch = async (query?: SearchParams | string, page = 0) => {
   latestQuery.value = query
   latestPage.value = page
 
@@ -118,8 +109,11 @@ const usingSingleSearch = (query?: SearchParams | string, page = 0) => {
   if (page == 0) {
     results.value.length = 0
     mergeResults.value.length = 0
+    mDocumentList.value = []
+    searching.value = true
   }
   let index = getQuery('_index')
+  let promise
   if (index) {
     let _searchQuery: SearchParams
     if (typeof query == 'string') {
@@ -139,29 +133,33 @@ const usingSingleSearch = (query?: SearchParams | string, page = 0) => {
         offset: offset
       }
     }
-    window.msClient.index(index).search(null, _searchQuery)
+    // await sleep(1000)
+    promise = window.msClient.index(index).search(null, _searchQuery)
       .then(value => {
         let results = [{
           ...value,
-          indexUid: index,
+          indexUid: index
         }]
         estimatedTotalHits.value = results[0].estimatedTotalHits ?? 0
         processingTimeMs.value = results[0].processingTimeMs ?? 0
         renderList(results, mergeResults.value, page == 0)
         mDocumentList.value = mergeResults.value
       }).catch(reason => {
-      let error = reason as MeiliSearchCommunicationError
-      useToast().toast({
-        class: cn(
-          'right-0 bottom-0 flex fixed md:max-w-[420px] md:right-4 md:bottom-4'
-        ),
-        variant: 'destructive',
-        title: `${error.code}`,
-        description: error.message,
-        duration: 4000
+        let error = reason as MeiliSearchCommunicationError
+        useToast().toast({
+          class: cn(
+            'right-0 bottom-0 flex fixed md:max-w-[420px] md:right-4 md:bottom-4'
+          ),
+          variant: 'destructive',
+          title: `${error.code}`,
+          description: error.message,
+          duration: 4000
+        })
       })
-    })
+  } else {
+    promise = new Promise((resolve, reject) => reject.apply('indexUid is missing.'))
   }
+  promise.finally(() => searching.value = false)
 }
 
 const usingMultiSearch = (query?: SearchParams | string, page = 0) => {
@@ -374,7 +372,7 @@ const rotate = (event: any) => {
               <ArrowLeftToLine class="transition-all duration-500"
                                :class="!spreadScreen && 'rotate-180 text-black'" />
             </Button>
-            <MultiSearchPopover @performSearch="payload => search(payload, 0)" :indexes="indexes" />
+            <MultiSearchPopover @performSearch="payload => throttleSearch(payload, 0)" :indexes="indexes" />
           </div>
         </div>
         <Separator />
@@ -400,12 +398,17 @@ const rotate = (event: any) => {
                 {{ processingTimeMs }} ms
               </div>
             </div>
+            <div class="grid gap-1">
+              <LoaderCircle v-if="searching" class="rotate-loader h-5 w-5"/>
+              <CircleCheckBig v-else-if="processingTimeMs" class="h-5 w-5"/>
+            </div>
           </div>
         </div>
         <Separator />
         <TabsContent value="all" class="m-0 p-4">
           <DocumentList v-model:selected-document="selectedDocument"
                         :documents="mDocumentList"
+                        :searching="searching"
                         @click-document="spreadDocument = true"
                         @reach-bottom="() => {search(latestQuery, latestPage + 1)}"
           />
@@ -435,5 +438,9 @@ const rotate = (event: any) => {
 
 .rotate-animation {
   animation: rotate 1s linear;
+}
+
+.rotate-loader {
+  animation: rotate 600ms linear infinite;
 }
 </style>

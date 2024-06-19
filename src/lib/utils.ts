@@ -26,3 +26,7 @@ export function formattedCount(count: number, digits = 0): string {
   }
   return count.toFixed(digits) + unit[offset]
 }
+
+export async function sleep(ms: number) {
+  await new Promise(resolve => setTimeout(resolve, ms))
+}

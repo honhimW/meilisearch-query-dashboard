@@ -174,12 +174,13 @@ const columns: ColumnDef<ITableData>[] = [
   },
   {
     accessorKey: 'type',
-    header: 'Type'
+    header: 'Type',
+    cell: ({ row }) => h('pre', { class: 'max-w-[500px] truncate font-medium' }, row.original.type)
   },
   {
     accessorKey: 'finishedAt',
     header: 'Finished At',
-    cell: ({ row }) => h('span', { class: 'max-w-[500px] truncate font-medium' }, _formatDate(row.original.finishedAt, 'yyyy-MM-dd HH:mm:ss.SSS'))
+    cell: ({ row }) => h('pre', { class: 'max-w-[500px] truncate font-medium' }, _formatDate(row.original.finishedAt, 'yyyy-MM-dd HH:mm:ss.SSS'))
   },
   {
     accessorKey: 'canceledBy',
@@ -190,13 +191,13 @@ const columns: ColumnDef<ITableData>[] = [
     accessorKey: 'details',
     header: 'Details',
     enableHiding: true,
-    cell: ({ row }) => h('span', { class: 'max-w-[500px] truncate font-medium' }, JSON.stringify(row.original.details))
+    cell: ({ row }) => h('pre', { class: 'max-w-[500px] truncate font-medium' }, JSON.stringify(row.original.details))
   },
   {
     accessorKey: 'error',
     header: 'Error',
     enableHiding: true,
-    cell: ({ row }) => h('span', { class: 'max-w-[500px] truncate font-medium' }, JSON.stringify(row.original.error))
+    cell: ({ row }) => h('pre', { class: 'max-w-[500px] truncate font-medium', title: JSON.stringify(row.original.error) }, JSON.stringify(row.original.error))
   },
   {
     accessorKey: 'duration',
@@ -207,13 +208,13 @@ const columns: ColumnDef<ITableData>[] = [
     accessorKey: 'startedAt',
     header: 'Started At',
     enableHiding: true,
-    cell: ({ row }) => h('span', { class: 'max-w-[500px] truncate font-medium' }, _formatDate(row.original.startedAt, 'yyyy-MM-dd HH:mm:ss.SSS'))
+    cell: ({ row }) => h('pre', { class: 'max-w-[500px] truncate font-medium' }, _formatDate(row.original.startedAt, 'yyyy-MM-dd HH:mm:ss.SSS'))
   },
   {
     accessorKey: 'enqueuedAt',
     header: 'Enqueued At',
     enableHiding: true,
-    cell: ({ row }) => h('span', { class: 'max-w-[500px] truncate font-medium' }, _formatDate(row.original.enqueuedAt, 'yyyy-MM-dd HH:mm:ss.SSS'))
+    cell: ({ row }) => h('pre', { class: 'max-w-[500px] truncate font-medium' }, _formatDate(row.original.enqueuedAt, 'yyyy-MM-dd HH:mm:ss.SSS'))
   },
   {
     id: 'actions',
@@ -232,7 +233,7 @@ const columns: ColumnDef<ITableData>[] = [
       return JSON.stringify(row.original).includes(filterValue)
     },
     cell: () => {
-      return h('span', { style: 'visibility: hidden' }, '')
+      return h('pre', { style: 'visibility: hidden' }, '')
     }
   },
 ]

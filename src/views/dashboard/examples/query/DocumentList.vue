@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
-import { onMounted, ref } from 'vue'
 import ListItem from '@/views/dashboard/examples/query/ListItem.vue'
 import type { Attribute, ScreenProps } from '@/views/dashboard/examples/query/Screen.vue'
 
@@ -22,6 +21,7 @@ interface IndexSettings {
 defineProps<{
   documents: MDocument[]
   indexSettings?: IndexSettings
+  searching?: boolean
 }>()
 const selectedDocument = defineModel<MDocument>('selectedDocument', { required: false })
 
@@ -51,31 +51,30 @@ const onSelectedDocument = (item: MDocument) => {
             @click="onSelectedDocument(item)"
           >
             <div class="flex w-full flex-col gap-1">
-<!--              <div class="text-xs font-medium">-->
-<!--                {{ item.id }}-->
-<!--              </div>-->
+<!--              <div class="text-xs font-medium">{{ item.id }}</div>-->
               <ListItem :row="item.doc" :attributes="item.attributes"></ListItem>
             </div>
           </div>
         </TransitionGroup>
       </div>
+
     </ScrollArea>
 </template>
 
-<style scoped>
-.list-move,
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.5s ease;
-}
+<!--<style scoped>-->
+<!--.list-move,-->
+<!--.list-enter-active,-->
+<!--.list-leave-active {-->
+<!--  transition: all 0.5s ease;-->
+<!--}-->
 
-.list-enter-from,
-.list-leave-to {
-  opacity: 0;
-  transform: translateY(15px);
-}
+<!--.list-enter-from,-->
+<!--.list-leave-to {-->
+<!--  opacity: 0;-->
+<!--  transform: translateY(15px);-->
+<!--}-->
 
-.list-leave-active {
-  position: absolute;
-}
-</style>
+<!--.list-leave-active {-->
+<!--  position: absolute;-->
+<!--}-->
+<!--</style>-->

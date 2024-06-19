@@ -5,7 +5,7 @@ import {
   MoreHorizontal,
   Tags,
   RotateCw,
-  User,
+  Settings,
 } from 'lucide-vue-next'
 
 import { Button } from '@/components/ui/button'
@@ -33,6 +33,7 @@ import {
 import { cn } from '@/lib/utils'
 import { getQuery, updateQueries } from '@/stores/app'
 import { Input } from '@/components/ui/input'
+import router from '@/router'
 
 interface IndexSwitcherProps {
   isCollapsed: boolean
@@ -133,6 +134,10 @@ const open = ref(false)
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuSeparator />
+          <DropdownMenuItem @click="router.push(`/dashboard/settings?indexUid=${selectedIndex?.uid}`)">
+            <Settings class="mr-2 h-4 w-4" />
+            Settings
+          </DropdownMenuItem>
           <DropdownMenuItem style="color: #d10065" @click="refresh">
             <RotateCw class="mr-2 h-4 w-4" />
             Refresh
