@@ -9,6 +9,17 @@ import { CirclePlay } from 'lucide-vue-next'
 import { ToastAction, useToast } from '@/components/ui/toast'
 import { cn } from '@/lib/utils'
 import router from '@/router'
+import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import DiffView from '@/views/dashboard/examples/settings/DiffView.vue'
 
 const toMonacoTheme = (themeMode: string) => {
   return themeMode === 'dark' ? 'shacdn-ui-dark' : 'shacdn-ui-light'
@@ -17,6 +28,7 @@ const toMonacoTheme = (themeMode: string) => {
 const monacoTheme = ref(toMonacoTheme(localStorage.getItem('themeMode') as string))
 
 const monacoEditorValue = ref<string>('')
+const currentSettings = ref<string>('')
 
 const options: editor.IEditorOptions = {
   fontSize: 13,
@@ -50,30 +62,48 @@ const customizeEditor = (editor: monaco.editor.IStandaloneCodeEditor) => {
 
 onMounted(() => {
   let indexUid = getQuery('indexUid')
+  let promise: Promise<string[]>
   if (indexUid) {
-    window.msClient.index(indexUid).getSettings()
+    promise = window.msClient.index(indexUid).getSettings()
       .then(value => {
-        monacoEditorValue.value = JSON.stringify(value, null, 4)
+        let current = JSON.stringify(value, null, 4)
+        monacoEditorValue.value = current
+        currentSettings.value = current
       }).then(value => {
-      window.msClient.index(indexUid).getStats()
-        .then(value => {
-          let fieldDistribution = value.fieldDistribution
-          let fields: string[] = []
-          for (let fieldDistributionKey in fieldDistribution) {
-            fields.push(fieldDistributionKey)
-          }
-          updateSchema(fields)
-        })
-    })
+        return window.msClient.index(indexUid).getStats()
+          .then(value => {
+            let fieldDistribution = value.fieldDistribution
+            let fields: string[] = []
+            for (let fieldDistributionKey in fieldDistribution) {
+              fields.push(fieldDistributionKey)
+            }
+            return fields
+          })
+      })
   } else {
     monacoEditorValue.value =
       `{
 
 }`
+    promise = new Promise<string[]>(resolve => {
+      resolve([])
+    })
   }
+  promise
+    .then(fields => updateSchema(fields))
+    .catch(() => updateSchema())
 })
 
+interface Field {
+  name: string
+  type: string
+  nullable: boolean
+  length: number | undefined
+  desc: string | undefined
+}
+
 const updateSchema = (fields = [] as string[]) => {
+  let tables = [{}]
   monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
     validate: true,
     allowComments: true,
@@ -91,7 +121,7 @@ const updateSchema = (fields = [] as string[]) => {
                   type: 'string'
                 },
                 {
-                  enum: fields.concat('*')
+                  enum: fields
                 }
               ]
             }
@@ -110,7 +140,7 @@ const updateSchema = (fields = [] as string[]) => {
                   type: 'string'
                 },
                 {
-                  enum: fields.concat('*')
+                  enum: fields
                 }
               ]
             }
@@ -300,6 +330,13 @@ const updateSchema = (fields = [] as string[]) => {
   })
 }
 
+
+const dialogOpened = ref<boolean>(false)
+
+const openDiffView = () => {
+  dialogOpened.value = true
+}
+
 const updateSettings = () => {
   let settingJson = monacoEditorValue.value
   let indexUid = getQuery('indexUid')
@@ -348,6 +385,37 @@ const updateSettings = () => {
 
 <template>
   <div class="flex flex-1 flex-col h-screen">
+    <Button
+      variant="outline"
+      size="icon"
+      class="h-8 w-8 shrink-0 rounded-full"
+      @click="openDiffView"
+    >
+      <CirclePlay class="transition-all duration-500" />
+    </Button>
+    <Dialog v-model:open="dialogOpened" @keydown.esc.prevent="dialogOpened = false">
+      <DialogContent style="width: 100vh" class="sm:max-w-[425px]">
+        <DialogHeader class="text-left">
+          <DialogTitle>Edit profile</DialogTitle>
+          <DialogDescription>
+            Setup Meili-Search Client.
+          </DialogDescription>
+        </DialogHeader>
+        <DiffView :current-settings="currentSettings" :monaco-editor-value="monacoEditorValue" />
+        <DialogFooter class="flex flex-row justify-between items-center gap-4">
+          <div class="flex gap-4" style="color: #e00b0b">
+          </div>
+          <div class="flex gap-4">
+            <Button type="submit" @click="saveAndClose" variant="default">
+              OK
+            </Button>
+            <Button type="submit" @click="save" variant="destructive">
+              Apply
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     <Button
       variant="outline"
       size="icon"
