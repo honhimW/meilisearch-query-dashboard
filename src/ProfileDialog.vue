@@ -94,7 +94,7 @@ const checkUrl = () => {
       </div>
       <DialogFooter class="flex flex-row justify-between items-center gap-4">
         <div class="flex gap-4" style="color: #e00b0b">
-          <div v-if="!isValid">
+          <div v-if="!isValid" class="flex flex-row justify-between">
             <Icon name="TriangleAlert" />
             <span>
               Invalid URL!

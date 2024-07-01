@@ -50,7 +50,7 @@ watch(ctrlK, (value, oldValue, onCleanup) => {
 
 const getSetting = (): Settings | undefined => {
   let settings = undefined
-  let index = getQuery('_index')
+  let index = getQuery('indexUid')
   if (props) {
     let find = (props.indexes as IndexHolder[]).find(value => value.uid === index)
     settings = find?.settings

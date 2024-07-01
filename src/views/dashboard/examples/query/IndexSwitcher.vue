@@ -59,7 +59,7 @@ onMounted(() => {
 
 watch(() => selectedIndex.value, value => {
   if (value) {
-    updateQueries('_index', oldValue => value.uid)
+    updateQueries('indexUid', oldValue => value.uid)
   }
 })
 
@@ -72,8 +72,8 @@ const refresh = () => {
 const updateSelectedIndex = () => {
   if (selectedIndex.value) {
     selectedIndex.value = props.indexes.find(value => value.uid == selectedIndex?.value?.uid)
-  } else if (getQuery('_index')) {
-    selectedIndex.value = props.indexes.find(value => value.uid == getQuery('_index'))
+  } else if (getQuery('indexUid')) {
+    selectedIndex.value = props.indexes.find(value => value.uid == getQuery('indexUid'))
   } else if (props.indexes.length > 0) {
     selectedIndex.value = props.indexes[0]
   } else {

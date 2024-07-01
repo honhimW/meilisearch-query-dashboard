@@ -87,7 +87,7 @@ const searchLimit = () => {
 }
 
 const currentIndex = computed<IndexHolder | undefined>(oldValue => {
-  let index = getQuery('_index')
+  let index = getQuery('indexUid')
   return indexes.value.find(value => value.uid == index)
 })
 
@@ -112,7 +112,7 @@ const usingSingleSearch = async (query?: SearchParams | string, page = 0) => {
     mDocumentList.value = []
     searching.value = true
   }
-  let index = getQuery('_index')
+  let index = getQuery('indexUid')
   let promise
   if (index) {
     let _searchQuery: SearchParams
@@ -174,7 +174,7 @@ const usingMultiSearch = (query?: SearchParams | string, page = 0) => {
     results.value.length = 0
     mergeResults.value.length = 0
   }
-  let index = getQuery('_index')
+  let index = getQuery('indexUid')
   if (index) {
     let _searchQuery: MultiSearchQuery
     if (typeof query == 'string') {

@@ -73,9 +73,13 @@ export default defineComponent({
         target: monaco.languages.typescript.ScriptTarget.ES2020,
         allowNonTsExtensions: true
       })
-      let model: ITextModel | undefined = undefined
+      let model: ITextModel | undefined | null = undefined
       if (props.fileUri) {
-        model = monaco.editor.createModel(props.modelValue, props.language, monaco.Uri.parse(props.fileUri))
+        let uri = monaco.Uri.parse(props.fileUri)
+        model = monaco.editor.getModel(uri)
+        if (!model) {
+          model = monaco.editor.createModel(props.modelValue, props.language, uri)
+        }
       }
       editor = monaco.editor.create(codeEditBox.value, {
         model: model,

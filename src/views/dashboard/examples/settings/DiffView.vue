@@ -11,13 +11,19 @@ const diffView = ref<HTMLElement>()
 
 onMounted(() => {
   let editorDiv = diffView.value
-  console.log(diffView)
-  console.log(editorDiv)
   if (editorDiv) {
-    console.log(props)
-    let diffEditor = monaco.editor.createDiffEditor(editorDiv)
-    diffEditor.updateOptions({
-      readOnly: true
+    let diffEditor = monaco.editor.createDiffEditor(editorDiv, {
+      readOnly: true,
+      automaticLayout: true,
+      hideUnchangedRegions: {
+        enabled: true,
+        minimumLineCount: 5,
+        contextLineCount: 5,
+        revealLineCount: 5,
+      },
+      renderSideBySide: true,
+      useInlineViewWhenSpaceIsLimited: false,
+      scrollBeyondLastLine: false,
     })
     let originalModel = monaco.editor.createModel(props.currentSettings, 'json')
     let modifiedModel = monaco.editor.createModel(props.monacoEditorValue, 'json')
@@ -30,5 +36,5 @@ onMounted(() => {
 
 </script>
 <template>
-  <div ref="diffView" style="height: 70vh; width: 80vh"></div>
+  <div ref="diffView" style="height: 80vh"></div>
 </template>

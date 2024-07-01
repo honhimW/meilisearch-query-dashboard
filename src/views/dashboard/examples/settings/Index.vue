@@ -9,17 +9,7 @@ import { CirclePlay } from 'lucide-vue-next'
 import { ToastAction, useToast } from '@/components/ui/toast'
 import { cn } from '@/lib/utils'
 import router from '@/router'
-import { Input } from '@/components/ui/input'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import DiffView from '@/views/dashboard/examples/settings/DiffView.vue'
+import DiffViewSheet from '@/views/dashboard/examples/settings/DiffViewSheet.vue'
 
 const toMonacoTheme = (themeMode: string) => {
   return themeMode === 'dark' ? 'shacdn-ui-dark' : 'shacdn-ui-light'
@@ -51,7 +41,7 @@ const options: editor.IEditorOptions = {
   selectOnLineNumbers: true,
   scrollBeyondLastLine: true,
   overviewRulerBorder: true,
-  autoClosingQuotes: 'always'
+  autoClosingQuotes: 'always',
 }
 
 const editorRef = ref<monaco.editor.IStandaloneCodeEditor>()
@@ -94,22 +84,13 @@ onMounted(() => {
     .catch(() => updateSchema())
 })
 
-interface Field {
-  name: string
-  type: string
-  nullable: boolean
-  length: number | undefined
-  desc: string | undefined
-}
-
 const updateSchema = (fields = [] as string[]) => {
-  let tables = [{}]
   monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
     validate: true,
     allowComments: true,
     schemas: [{
       uri: 'settings',
-      fileMatch: ['*'],
+      fileMatch: ['settings.json'],
       schema: {
         type: 'object',
         properties: {
@@ -384,55 +365,22 @@ const updateSettings = () => {
 </script>
 
 <template>
-  <div class="flex flex-1 flex-col h-screen">
-    <Button
-      variant="outline"
-      size="icon"
-      class="h-8 w-8 shrink-0 rounded-full"
-      @click="openDiffView"
-    >
-      <CirclePlay class="transition-all duration-500" />
-    </Button>
-    <Dialog v-model:open="dialogOpened" @keydown.esc.prevent="dialogOpened = false">
-      <DialogContent style="width: 100vh" class="sm:max-w-[425px]">
-        <DialogHeader class="text-left">
-          <DialogTitle>Edit profile</DialogTitle>
-          <DialogDescription>
-            Setup Meili-Search Client.
-          </DialogDescription>
-        </DialogHeader>
-        <DiffView :current-settings="currentSettings" :monaco-editor-value="monacoEditorValue" />
-        <DialogFooter class="flex flex-row justify-between items-center gap-4">
-          <div class="flex gap-4" style="color: #e00b0b">
-          </div>
-          <div class="flex gap-4">
-            <Button type="submit" @click="saveAndClose" variant="default">
-              OK
-            </Button>
-            <Button type="submit" @click="save" variant="destructive">
-              Apply
-            </Button>
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-    <Button
-      variant="outline"
-      size="icon"
-      class="h-8 w-8 shrink-0 rounded-full"
-      @click="updateSettings"
-    >
-      <CirclePlay class="transition-all duration-500" />
-    </Button>
+  <div class="flex flex-1 flex-col h-screen gap-5">
     <MonacoEditor
       :theme="monacoTheme"
       :model-value="monacoEditorValue"
       language="json"
       :options="options"
-      file-uri="inmemory://settings.schema"
+      file-uri="inmemory://settings.json"
       @update:model-value="args => monacoEditorValue = args"
       @editor-mounted="customizeEditor"
       class="max-w-[100%] max-h-[100%]"
+      style="height: 80vh"
+    />
+    <DiffViewSheet
+      :current-settings="currentSettings"
+      :monaco-editor-value="monacoEditorValue"
+      @confirm="updateSettings"
     />
   </div>
 </template>
