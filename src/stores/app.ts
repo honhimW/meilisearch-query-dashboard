@@ -116,6 +116,12 @@ export const useAppStore = defineStore('app', {
         })
       }
     },
+    stopClient() {
+      this.setServerUrl(undefined)
+      this.setApiKey(undefined)
+      localStorage.removeItem(SERVER_VERSION)
+      window.msClient = undefined
+    },
     toggleTheme() {
       this.themeMode = this.themeMode === LIGHT ? DARK : LIGHT;
       this.applyTheme();

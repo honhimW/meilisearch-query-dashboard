@@ -134,28 +134,32 @@ const usingSingleSearch = async (query?: SearchParams | string, page = 0) => {
       }
     }
     // await sleep(1000)
-    promise = window.msClient.index(index).search(null, _searchQuery)
-      .then(value => {
-        let results = [{
-          ...value,
-          indexUid: index
-        }]
-        estimatedTotalHits.value = results[0].estimatedTotalHits ?? 0
-        processingTimeMs.value = results[0].processingTimeMs ?? 0
-        renderList(results, mergeResults.value, page == 0)
-        mDocumentList.value = mergeResults.value
-      }).catch(reason => {
-        let error = reason as MeiliSearchCommunicationError
-        useToast().toast({
-          class: cn(
-            'right-0 bottom-0 flex fixed md:max-w-[420px] md:right-4 md:bottom-4'
-          ),
-          variant: 'destructive',
-          title: `${error.code}`,
-          description: error.message,
-          duration: 4000
+    try {
+      promise = window.msClient.index(index).search(null, _searchQuery)
+        .then(value => {
+          let results = [{
+            ...value,
+            indexUid: index
+          }]
+          estimatedTotalHits.value = results[0].estimatedTotalHits ?? 0
+          processingTimeMs.value = results[0].processingTimeMs ?? 0
+          renderList(results, mergeResults.value, page == 0)
+          mDocumentList.value = mergeResults.value
+        }).catch(reason => {
+          let error = reason as MeiliSearchCommunicationError
+          useToast().toast({
+            class: cn(
+              'right-0 bottom-0 flex fixed md:max-w-[420px] md:right-4 md:bottom-4'
+            ),
+            variant: 'destructive',
+            title: `${error.code}`,
+            description: error.message,
+            duration: 4000
+          })
         })
-      })
+    } catch (e) {
+      promise = new Promise((resolve, reject) => reject.apply((e as Error).message))
+    }
   } else {
     promise = new Promise((resolve, reject) => reject.apply('indexUid is missing.'))
   }

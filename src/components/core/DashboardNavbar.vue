@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import GlobalSearchPopover from '@/components/core/GlobalSearchPopover.vue'
 import Breadcrumb from '@/components/ui/Breadcrumb.vue'
-import { Menu, MoonStar, Sun, Zap, ZapOff } from 'lucide-vue-next'
+import { Menu, MoonStar, Sun, Power, PowerOff } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/stores/app'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
@@ -75,8 +75,8 @@ const toggleMode = () => {
       <HoverCard>
         <HoverCardTrigger as-child>
           <Button variant="outline" class="border-0 p-[6px] w-8 h-8" @click="store.toggleDialog(true)">
-            <Zap v-if="store.serverUrl" style="color: deeppink" />
-            <ZapOff v-else style="color: darkred" />
+            <Power v-if="store.serverUrl" style="color: deeppink" />
+            <PowerOff v-else style="color: darkred" />
           </Button>
         </HoverCardTrigger>
         <HoverCardContent class="w-80">

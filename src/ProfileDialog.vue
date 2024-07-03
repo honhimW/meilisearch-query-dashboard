@@ -28,6 +28,12 @@ const save = () => {
   store.buildClient()
 }
 
+const disconnectAndClear = () => {
+  serverUrl.value = undefined
+  apiKey.value = undefined
+  store.stopClient()
+}
+
 const saveAndClose = () => {
   try {
     save()
@@ -102,6 +108,9 @@ const checkUrl = () => {
           </div>
         </div>
         <div class="flex gap-4">
+          <Button type="submit" @click="disconnectAndClear" variant="outline">
+            Reset
+          </Button>
           <Button type="submit" @click="saveAndClose" variant="default">
             OK
           </Button>
