@@ -242,6 +242,23 @@ const resolveByPreTokens = async (tokenStream: TokenStream, prevIndex: number, t
         kind: CompletionItemKind.Operator,
         insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
         label: {
+          label: ' -',
+          detail: '',
+          description: 'desc'
+        },
+        range: {
+          startLineNumber: 1,
+          startColumn: position.column,
+          endLineNumber: 1,
+          endColumn: position.column
+        },
+        insertText: '-',
+        documentation: ''
+      },
+      {
+        kind: CompletionItemKind.Operator,
+        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        label: {
           label: ' +',
           detail: '',
           description: 'asc'
@@ -255,23 +272,6 @@ const resolveByPreTokens = async (tokenStream: TokenStream, prevIndex: number, t
         insertText: '+',
         documentation: ''
       },
-      {
-        kind: CompletionItemKind.Operator,
-        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-        label: {
-          label: ' -',
-          detail: '',
-          description: 'desc'
-        },
-        range: {
-          startLineNumber: 1,
-          startColumn: position.column,
-          endLineNumber: 1,
-          endColumn: position.column
-        },
-        insertText: '-',
-        documentation: ''
-      }
     )
   } else if (isTokens(tokens, 'AT_ON', '\':\'')) {
     settings?.searchableAttributes?.forEach(searchableAttribute => {
