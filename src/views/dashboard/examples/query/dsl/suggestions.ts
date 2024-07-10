@@ -7,8 +7,9 @@ import CompletionItemKind = languages.CompletionItemKind
 import CompletionItem = languages.CompletionItem
 import type { Settings } from 'meilisearch'
 import { i } from 'vite/dist/node/types.d-aGj9QkWt'
+import { symbol } from 'zod'
 
-export const allSuggestions = (model: monaco.editor.ITextModel, position: monaco.Position, settings?: Settings): CompletionItem[] => {
+export const allSuggestions = async (model: monaco.editor.ITextModel, position: monaco.Position, settings?: Settings, indexUid?: string): Promise<CompletionItem[]> => {
   const lineContent = model.getLineContent(1)
   const parsed = parse2SearchParam(lineContent)
 
@@ -60,7 +61,7 @@ export const allSuggestions = (model: monaco.editor.ITextModel, position: monaco
       currentTokenType = MsDslLexer.symbolicNames[currentToken.type]
     }
 
-    const completionItems = resolveByPreTokens(tokenStream, preTokenIndex, [], position, settings)
+    const completionItems = await resolveByPreTokens(tokenStream, preTokenIndex, [], position, settings, indexUid)
     if (completionItems) {
       completionItems
         .filter(item => {
@@ -146,7 +147,7 @@ export const allSuggestions = (model: monaco.editor.ITextModel, position: monaco
   return items
 }
 
-const resolveByPreTokens = (tokenStream: TokenStream, prevIndex: number, tokens: string[], position: monaco.Position, settings?: Settings): CompletionItem[] => {
+const resolveByPreTokens = async (tokenStream: TokenStream, prevIndex: number, tokens: string[], position: monaco.Position, settings?: Settings, indexUid?: string): Promise<CompletionItem[]> => {
   if (prevIndex < 0) {
     return undefined
   }
@@ -162,7 +163,7 @@ const resolveByPreTokens = (tokenStream: TokenStream, prevIndex: number, tokens:
     case 'NUMBER':
     case 'IDENTIFIER':
     case '.':
-      return resolveByPreTokens(tokenStream, prevIndex - 1, tokens, position, settings)
+      return await resolveByPreTokens(tokenStream, prevIndex - 1, tokens, position, settings, indexUid)
     case 'AT_SORT':
     case 'AT_ON':
       break
@@ -316,7 +317,36 @@ const resolveByPreTokens = (tokenStream: TokenStream, prevIndex: number, tokens:
       }
     }).forEach((symbol) => items.push(symbol))
   } else if (isTokens(tokens, 'FILTER_SYMBOLS')) {
-    // nothing
+    if (indexUid) {
+      const attr = tokenStream.get(prevIndex - 2)
+      const attrText = attr.text
+      if (settings?.filterableAttributes?.includes(attrText)) {
+        const resp = await window.msClient.index(indexUid).searchForFacetValues({
+          facetName: attrText,
+        })
+        resp.facetHits.forEach(facet => {
+          items.push(
+            {
+              kind: CompletionItemKind.Method,
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              label: {
+                label: facet.value,
+                detail: ` ${facet.count}`,
+                description: 'facet'
+              },
+              range: {
+                startLineNumber: 1,
+                startColumn: position.column,
+                endLineNumber: 1,
+                endColumn: position.column
+              },
+              insertText: facet.value,
+              documentation: ''
+            }
+          )
+        })
+      }
+    }
   } else {
     items.push(
       {

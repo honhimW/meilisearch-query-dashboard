@@ -248,10 +248,11 @@ const configDSL = () => {
   monaco.languages.registerCompletionItemProvider(msDSL, {
     provideCompletionItems(model: monaco.editor.ITextModel, position: monaco.Position, context: monaco.languages.CompletionContext, token: CancellationToken): monaco.languages.ProviderResult<monaco.languages.CompletionList> {
 
-      let items = allSuggestions(model, position, getSetting())
-      return {
-        suggestions: items
-      }
+      return allSuggestions(model, position, getSetting(), getQuery('indexUid')).then(items => {
+        return {
+          suggestions: items
+        }
+      })
     }
   })
 }

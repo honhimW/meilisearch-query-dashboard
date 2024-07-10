@@ -110,11 +110,11 @@ const usingSingleSearch = async (query?: SearchParams | string, page = 0) => {
     results.value.length = 0
     mergeResults.value.length = 0
     mDocumentList.value = []
-    searching.value = true
   }
   let index = getQuery('indexUid')
   let promise
   if (index) {
+    searching.value = true
     let _searchQuery: SearchParams
     if (typeof query == 'string') {
       _searchQuery = {

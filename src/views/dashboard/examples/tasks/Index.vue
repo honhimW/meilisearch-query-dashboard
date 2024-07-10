@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import type {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState
-} from '@tanstack/vue-table'
+import type { ColumnDef, ColumnFiltersState, SortingState, VisibilityState } from '@tanstack/vue-table'
 import {
   FlexRender,
   getCoreRowModel,
@@ -13,12 +8,11 @@ import {
   getSortedRowModel,
   useVueTable
 } from '@tanstack/vue-table'
-import { ArrowUpDown, ChevronDown } from 'lucide-vue-next'
+import { ChevronDown } from 'lucide-vue-next'
 
 import { h, onMounted, ref } from 'vue'
 import DropdownAction from './ColumnAction.vue'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -26,14 +20,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { valueUpdater } from '@/lib/utils'
 import { Task, TaskStatus, type TaskTypes } from 'meilisearch'
 import router from '@/router'
@@ -42,6 +29,7 @@ import type { LocationQueryValue } from 'vue-router'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from 'date-fns'
 import type { FormatOptions } from 'date-fns/format'
+import { duration } from 'moment/moment'
 
 interface ITableData extends Task {
 
@@ -154,11 +142,16 @@ const tasks = ref<ITableData[]>([])
 const columns: ColumnDef<ITableData>[] = [
   {
     accessorKey: 'uid',
-    header: () => h('b', {}, 'UID')
+    header: () => h('b', {}, 'UID'),
+    cell: ({ row }) => h('pre', {
+      class: 'max-w-[500px] truncate font-medium',
+      style: 'font-weight: bold'
+    }, row.original.uid)
   },
   {
     accessorKey: 'indexUid',
-    header: 'Index'
+    header: 'Index',
+    cell: ({ row }) => h('pre', { class: 'max-w-[500px] truncate font-medium' }, row.original.indexUid)
   },
   {
     accessorKey: 'status',
@@ -197,12 +190,16 @@ const columns: ColumnDef<ITableData>[] = [
     accessorKey: 'error',
     header: 'Error',
     enableHiding: true,
-    cell: ({ row }) => h('pre', { class: 'max-w-[500px] truncate font-medium', title: JSON.stringify(row.original.error) }, JSON.stringify(row.original.error))
+    cell: ({ row }) => h('pre', {
+      class: 'max-w-[500px] truncate font-medium',
+      title: JSON.stringify(row.original.error)
+    }, JSON.stringify(row.original.error))
   },
   {
     accessorKey: 'duration',
     header: 'Duration',
-    enableHiding: true
+    enableHiding: true,
+    cell: ({ row }) => h('pre', { class: 'max-w-[500px] truncate font-medium' }, reformatDuration(row.original.duration))
   },
   {
     accessorKey: 'startedAt',
@@ -235,10 +232,14 @@ const columns: ColumnDef<ITableData>[] = [
     cell: () => {
       return h('pre', { style: 'visibility: hidden' }, '')
     }
-  },
+  }
 ]
 
-function _formatDate<DateType extends Date> (
+const reformatDuration = (_duration: string | undefined): string => {
+  return duration(_duration).toISOString()
+}
+
+function _formatDate<DateType extends Date>(
   date: DateType | number | string,
   formatStr: string,
   options?: FormatOptions
@@ -271,7 +272,7 @@ const columnVisibility = ref<VisibilityState>({
   duration: false,
   startedAt: false,
   enqueuedAt: false,
-  json: false,
+  json: false
 })
 const rowSelection = ref({})
 
