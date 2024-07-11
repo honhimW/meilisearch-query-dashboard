@@ -327,7 +327,7 @@ const resolveByPreTokens = async (tokenStream: TokenStream, prevIndex: number, t
         resp.facetHits.forEach(facet => {
           items.push(
             {
-              kind: CompletionItemKind.Method,
+              kind: CompletionItemKind.Event,
               insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
               label: {
                 label: facet.value,

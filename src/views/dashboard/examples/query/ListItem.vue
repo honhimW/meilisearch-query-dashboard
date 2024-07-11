@@ -18,9 +18,15 @@ const flatted = computed(() => {
     let selectedKeys = selected.map(_a => _a.title)
     for (let i = 0; i < selectedKeys.length; i++) {
       let key = selectedKeys[i]
-      let flattenObjectElement = _flattenObject[key]
-      if (flattenObjectElement) {
-        map.set(key, flattenObjectElement)
+      map.set(key, 'undefined')
+      for (let flattenObjectKey in _flattenObject) {
+        if (flattenObjectKey.startsWith(key)) {
+          let flattenObjectElement = _flattenObject[flattenObjectKey]
+          if (flattenObjectElement) {
+            map.set(key, flattenObjectElement)
+            break
+          }
+        }
       }
     }
   } else {

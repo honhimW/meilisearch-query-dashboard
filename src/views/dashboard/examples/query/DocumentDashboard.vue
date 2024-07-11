@@ -8,7 +8,7 @@ import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import type { MDocument } from '@/views/dashboard/examples/query/DocumentList.vue'
 import type { MultiSearchQuery, SearchParams } from 'meilisearch/src/types/types'
-import { type Hit, type MultiSearchResult, type Settings } from 'meilisearch'
+import { type FieldDistribution, type Hit, type MultiSearchResult, type Settings } from 'meilisearch'
 import { ArrowLeftToLine, LoaderCircle, CircleCheckBig } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { getQuery, updateQueries } from '@/stores/app'
@@ -23,9 +23,10 @@ interface MailProps {
 
 export interface IndexHolder {
   uid: string
-  primaryKey: string | undefined
   count: string
-  settings: Settings | undefined
+  primaryKey?: string
+  settings?: Settings
+  fieldDistribution?: FieldDistribution
 }
 
 const props = withDefaults(defineProps<MailProps>(), {
@@ -45,11 +46,13 @@ const refreshIndexes = (hook: () => void) => {
         uid: index.uid,
         primaryKey: primaryKey,
         count: '0',
-        settings: undefined
+        settings: undefined,
+        fieldDistribution: undefined,
       }
       indexes.value.push(item)
       index.getStats().then(stats => {
         item.count = formattedCount(stats.numberOfDocuments, 1)
+        item.fieldDistribution = stats.fieldDistribution
         hook()
       })
       index.getSettings().then(settings => item.settings = settings)
