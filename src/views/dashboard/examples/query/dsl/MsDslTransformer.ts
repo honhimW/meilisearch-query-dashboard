@@ -7,6 +7,7 @@ import type { Token } from 'antlr4'
 import { TokenStream } from 'antlr4/src/antlr4/TokenStream'
 import { ParserRuleContext } from 'antlr4/src/antlr4/context/ParserRuleContext'
 import { useAppStore } from '@/stores/app'
+import * as test from 'node:test'
 
 export const checkLexer = (input: string): MsDslError[] | undefined => {
   const { lexerErrors } = toAST(input)
@@ -107,7 +108,11 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
               valueText = quote + valueText + quote
             }
           }
-          filters.push(`${keyText} ${symbolText} ${valueText}`)
+          if (symbolText == 'raw') {
+            filters.push(unquote(valueText))
+          } else {
+            filters.push(`${keyText} ${symbolText} ${valueText}`)
+          }
         }
       } else if (cc.sortContent()) {
         const sortContentContext = cc.sortContent()
@@ -116,13 +121,17 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
         const keyContext = sortContentContext.key()
         const keyText = getKey(keyContext)
         if (!sortableAttributes.includes(keyText) && !sortableAttributes.includes('*')) {
-          const token = (keyContext as unknown as ParserRuleContext).start
-          settingErrors.push({
-            line: 1,
-            startColumn: token.start + 1,
-            endColumn: (token.stop + 1) + 1,
-            message: `[${keyText}] is not a sortable attribute.`
-          })
+          if (sortableAttributes.includes('_geo') && keyText.startsWith('_geoPoint')) {
+            // ignore
+          } else {
+            const token = (keyContext as unknown as ParserRuleContext).start
+            settingErrors.push({
+              line: 1,
+              startColumn: token.start + 1,
+              endColumn: (token.stop + 1) + 1,
+              message: `[${keyText}] is not a sortable attribute.`
+            })
+          }
         }
         if (asc) {
           sorts.push(keyText + ':asc')
@@ -175,6 +184,14 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
     tokenStream: tokenStream,
     settingErrors: settingErrors
   }
+}
+
+const unquote = (valueText: string): string => {
+  if ((valueText.startsWith('\'') && valueText.endsWith('\'')) || (valueText.startsWith('"') && valueText.endsWith('"'))) {
+    const quote = valueText.charAt(0)
+    valueText = valueText.slice(1, -1)
+  }
+  return valueText
 }
 
 const getKey = (keyContext: KeyContext): string | undefined => {

@@ -124,7 +124,7 @@ onMounted(() => {
       taskQuery.from = Number(queryElement as string)
     }
   }
-  console.log(taskQuery)
+  // console.log(taskQuery)
   window.msClient.getTasks(taskQuery)
     .then(value => {
       let _tasks: ITableData[] = []

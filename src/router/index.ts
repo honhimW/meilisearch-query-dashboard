@@ -41,6 +41,15 @@ const router = createRouter({
           path: 'task',
           name: 'tasks_index',
           component: () => import('@/views/dashboard/examples/tasks/Index.vue'),
+          beforeEnter: (to, from, next) => {
+            console.log(to)
+            if (Object.keys(to.query).length == 0) {
+              to.fullPath += '?status=*&limit=20'
+              to.query.status = '*'
+              to.query.limit = '20'
+            }
+            next()
+          },
           meta: {
             title: 'Tasks',
           } as RouteMeta & IRouteMeta

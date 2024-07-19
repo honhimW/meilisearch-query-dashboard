@@ -1,14 +1,3 @@
-// Student Main
-// 2020-07-22
-// Public domain
-
-// JSON5 is a superset of JSON, it included some feature from ES5.1
-// See https://json5.org/
-// Derived from ../json/JSON.g4 which original derived from http://json.org
-
-// $antlr-format alignTrailingComments true, columnLimit 150, minEmptyLines 1, maxEmptyLinesToKeep 1, reflowComments false, useTab false
-// $antlr-format allowShortRulesOnASingleLine false, allowShortBlocksOnASingleLine true, alignSemicolons hanging, alignColons hanging
-
 grammar MsDsl;
 
 line
@@ -52,6 +41,7 @@ FILTER_SYMBOLS
     | '<'
     | '<='
     | 'like'
+    | 'raw'
     ;
 
 queryContent

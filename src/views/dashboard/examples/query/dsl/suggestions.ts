@@ -216,25 +216,47 @@ const resolveByPreTokens = async (tokenStream: TokenStream, prevIndex: number, t
     })
   } else if (isTokens(tokens, 'ASC') || isTokens(tokens, 'DESC')) {
     settings?.sortableAttributes?.forEach(sortableAttribute => {
-      items.push(
-        {
-          kind: CompletionItemKind.Property,
-          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-          label: {
-            label: sortableAttribute,
-            detail: '',
-            description: 'sortable'
-          },
-          range: {
-            startLineNumber: 1,
-            startColumn: position.column,
-            endLineNumber: 1,
-            endColumn: position.column
-          },
-          insertText: sortableAttribute,
-          documentation: ''
-        }
-      )
+      if (sortableAttribute == '_geo') {
+        items.push(
+          {
+            kind: CompletionItemKind.Property,
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            label: {
+              label: '_geoPoint',
+              detail: '',
+              description: 'sortable'
+            },
+            range: {
+              startLineNumber: 1,
+              startColumn: position.column,
+              endLineNumber: 1,
+              endColumn: position.column
+            },
+            insertText: `'_geoPoint($\{1:0}, $\{2:0})' `,
+            documentation: ''
+          }
+        )
+      } else {
+        items.push(
+          {
+            kind: CompletionItemKind.Property,
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            label: {
+              label: sortableAttribute,
+              detail: '',
+              description: 'sortable'
+            },
+            range: {
+              startLineNumber: 1,
+              startColumn: position.column,
+              endLineNumber: 1,
+              endColumn: position.column
+            },
+            insertText: sortableAttribute,
+            documentation: ''
+          }
+        )
+      }
     })
   } else if (isTokens(tokens, 'AT_SORT', '\':\'')) {
     items.push(
@@ -296,13 +318,22 @@ const resolveByPreTokens = async (tokenStream: TokenStream, prevIndex: number, t
       )
     })
   } else if (isTokens(tokens, 'HASH', 'IDENTIFIER', '\':\'') || isTokens(tokens, 'STRING', '\':\'')) {
-    const symbols = ['=', '!=', '>', '>=', '<', '<=', 'like']
+    const symbols = [
+      { label: '=', insert: `= $\{1} ` },
+      { label: '!=', insert: `!= $\{1} ` },
+      { label: '>', insert: `> $\{1} ` },
+      { label: '>=', insert: `>= $\{1} ` },
+      { label: '<', insert: `< $\{1} ` },
+      { label: '<=', insert: `<= $\{1} ` },
+      { label: 'like', insert: `like '%$\{1}%' ` },
+      { label: 'raw', insert: `raw '$\{1}' ` },
+    ]
     symbols.map(symbol => {
       return {
         kind: CompletionItemKind.Operator,
         insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
         label: {
-          label: ' ' + symbol,
+          label: ' ' + symbol.label,
           detail: '',
           description: 'filter'
         },
@@ -312,7 +343,7 @@ const resolveByPreTokens = async (tokenStream: TokenStream, prevIndex: number, t
           endLineNumber: 1,
           endColumn: position.column
         },
-        insertText: symbol,
+        insertText: symbol.insert,
         documentation: ''
       }
     }).forEach((symbol) => items.push(symbol))
@@ -321,6 +352,46 @@ const resolveByPreTokens = async (tokenStream: TokenStream, prevIndex: number, t
       const attr = tokenStream.get(prevIndex - 2)
       const attrText = attr.text
       if (settings?.filterableAttributes?.includes(attrText)) {
+        if (attrText == '_geo') {
+          items.push(
+            {
+              kind: CompletionItemKind.Event,
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              label: {
+                label: '_geoRadius',
+                detail: ' radius',
+                description: 'geo'
+              },
+              range: {
+                startLineNumber: 1,
+                startColumn: position.column,
+                endLineNumber: 1,
+                endColumn: position.column
+              },
+              insertText: `'_geoRadius($\{1:0}, $\{2:0}, $\{3:0})' `,
+              documentation: ''
+            },
+            {
+              kind: CompletionItemKind.Event,
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              label: {
+                label: '_geoBoundingBox',
+                detail: ' bounding box',
+                description: 'geo'
+              },
+              range: {
+                startLineNumber: 1,
+                startColumn: position.column,
+                endLineNumber: 1,
+                endColumn: position.column
+              },
+              insertText: `'_geoBoundingBox([$\{1:0}, $\{2:0}], [$\{3:0}, $\{4:0}])' `,
+              documentation: ''
+            }
+          )
+        }
+
+
         const resp = await window.msClient.index(indexUid).searchForFacetValues({
           facetName: attrText,
         })
