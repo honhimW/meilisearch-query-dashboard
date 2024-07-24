@@ -70,14 +70,6 @@ const router = createRouter({
             title: 'Settings',
           } as RouteMeta & IRouteMeta
         },
-        {
-          path: 'map',
-          name: 'map_index',
-          component: () => import('@/views/dashboard/examples/map/Index.vue'),
-          meta: {
-            title: 'Map',
-          } as RouteMeta & IRouteMeta
-        },
       ],
     },
     {
