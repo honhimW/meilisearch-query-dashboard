@@ -2,6 +2,7 @@
 import { computed, defineComponent, h } from 'vue'
 import type { Attribute, ScreenProps } from '@/views/dashboard/examples/query/Screen.vue'
 import { type ColumnDef, DataTable } from '@/components/ui/data-table'
+import { LMap, LMarker, LTileLayer } from '@vue-leaflet/vue-leaflet'
 
 const props = defineProps<{
   row: Record<string, any>
@@ -16,6 +17,16 @@ const flatted = computed(() => {
     iDatas.push({
       key: flattenObjectKey,
       value: _flattenObject[flattenObjectKey]
+    })
+  }
+
+  if (_flattenObject['_geo.lat'] && _flattenObject['_geo.lng']) {
+    iDatas.push({
+      key: '_geo',
+      value: {
+        lat: _flattenObject['_geo.lat'],
+        lng: _flattenObject['_geo.lng'],
+      }
     })
   }
 
@@ -40,7 +51,7 @@ interface IData {
 }
 
 const InnerHTMLComponent = defineComponent({
-  props: ['html','type'],
+  props: ['html', 'type'],
   render() {
     return h(this.type ?? 'div', { innerHTML: this.html })
   }
@@ -48,7 +59,12 @@ const InnerHTMLComponent = defineComponent({
 
 const resolveMedia = (raw: any) => {
   if (typeof raw == 'string' && raw.indexOf('</aishl-msq-t>') != -1) {
-    return h(InnerHTMLComponent, { class: ' font-medium source', style: 'word-break: break-word; white-space: pre-wrap', type: 'pre', html: raw })
+    return h(InnerHTMLComponent, {
+      class: ' font-medium source',
+      style: 'word-break: break-word; white-space: pre-wrap',
+      type: 'pre',
+      html: raw
+    })
   }
 
   let imgRegex = /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp|svg|psd|bmp|tif)$/i
@@ -66,7 +82,44 @@ const resolveMedia = (raw: any) => {
   } else if (link.test(url)) {
     return h('a', { href: url }, url)
   } else {
-    return h(InnerHTMLComponent, { class: ' font-medium source', style: 'word-break: break-word; white-space: pre-wrap', type: 'pre', html: raw })
+    return h(InnerHTMLComponent, {
+      class: ' font-medium source',
+      style: 'word-break: break-word; white-space: pre-wrap',
+      type: 'pre',
+      html: raw
+    })
+  }
+}
+
+const resolveGeo = (geo: {lat: number, lng: number}) => {
+  return h('div', {
+    style: 'height:200px; width:400px',
+  }, [
+    h(LMap, {
+      class: 'flex items-center',
+      zoom: 12,
+      center: [geo.lat, geo.lng],
+      useGlobalLeaflet: false,
+      options: {
+        attributionControl: false,
+      }
+    }, [
+      h(LTileLayer, {
+        'layer-type': 'base',
+        url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+      }),
+      h(LMarker, {
+        latLng: [geo.lat, geo.lng]
+      }),
+    ])
+  ])
+}
+
+const resolve = (original: any) => {
+  if (original.key == '_geo') {
+    return resolveGeo(original.value)
+  } else {
+    return resolveMedia(original.value)
   }
 }
 
@@ -75,7 +128,7 @@ const columns: ColumnDef<IData>[] = [
     accessorKey: 'key',
     header: () => h('b', {}, 'Key'),
     enableSorting: false,
-    cell: ({ row }) => h('pre', {style: 'font-weight: bolder;'}, row.original.key),
+    cell: ({ row }) => h('pre', { style: 'font-weight: bolder;' }, row.original.key)
   },
   {
     accessorKey: 'value',
@@ -84,7 +137,7 @@ const columns: ColumnDef<IData>[] = [
       class: 'flex items-center',
       style: 'width: 100%; height: 100%'
     }, [
-      resolveMedia(row.original.value)
+      resolve(row.original)
     ]),
     enableSorting: false
   }

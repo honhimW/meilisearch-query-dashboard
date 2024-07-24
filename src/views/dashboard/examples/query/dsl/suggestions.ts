@@ -326,7 +326,7 @@ const resolveByPreTokens = async (tokenStream: TokenStream, prevIndex: number, t
       { label: '<', insert: `< $\{1} ` },
       { label: '<=', insert: `<= $\{1} ` },
       { label: 'like', insert: `like '%$\{1}%' ` },
-      { label: 'raw', insert: `raw '$\{1}' ` },
+      { label: 'raw', insert: `raw $\{1} ` },
     ]
     symbols.map(symbol => {
       return {
