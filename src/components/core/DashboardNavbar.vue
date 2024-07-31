@@ -1,16 +1,29 @@
 <script setup lang="ts">
 import GlobalSearchPopover from '@/components/core/GlobalSearchPopover.vue'
 import Breadcrumb from '@/components/ui/Breadcrumb.vue'
-import { Menu, MoonStar, Sun, Power, PowerOff } from 'lucide-vue-next'
+import { Menu, MoonStar, Power, PowerOff, Sun } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/stores/app'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 
 const store = useAppStore()
 
 const toggleMode = () => {
   store.toggleTheme()
 }
+
+const updateExperimentalFeatures = (key: string, enabled: boolean) => {
+  if (store.experimentalFeatures) {
+    store.experimentalFeatures[key] = enabled
+  }
+  window.msClient.httpRequest.patch('/experimental-features', store.experimentalFeatures).then(value => {
+    store.experimentalFeatures = value
+  })
+}
+
 </script>
 
 <template>
@@ -93,10 +106,28 @@ const toggleMode = () => {
                   {{ 'Not Connected.' }}
                 </span>
               </p>
+              <Separator/>
               <div class="flex items-center pt-2">
                 <span class="text-xs text-muted-foreground">
-              @honhimw
-            </span>
+                  <a href="https://www.meilisearch.com/docs/reference/api/experimental_features" target="_blank">
+                    Experimental Features
+                  </a>
+                </span>
+              </div>
+              <Label
+                v-for="(v, k) in store.experimentalFeatures"
+                :key="k"
+                html-for="mute"
+                class="flex items-center gap-2 text-xs font-normal"
+              >
+                <Switch :id="k" aria-label="Editable" :checked="v" @update:checked="_bool => updateExperimentalFeatures(k, _bool)" />
+                {{ k }}
+              </Label>
+              <Separator/>
+              <div class="flex items-center pt-2">
+                <span class="text-xs text-muted-foreground">
+                  @honhimw
+                </span>
               </div>
             </div>
           </div>

@@ -9,9 +9,10 @@ interface IAppStore {
   wrapperLeftOffset: number | string
   navWidth: number | string
   showDialog: boolean
-  serverUrl: string | undefined
-  apiKey: string | undefined
-  serverVersion: string | undefined
+  serverUrl?: string
+  apiKey?: string
+  serverVersion?: string
+  experimentalFeatures?: Record<string, boolean>
 }
 
 const LIGHT = 'light';
@@ -34,7 +35,8 @@ export const useAppStore = defineStore('app', {
     showDialog: false,
     serverUrl: undefined,
     apiKey: undefined,
-    serverVersion: undefined
+    serverVersion: undefined,
+    experimentalFeatures: undefined,
   }),
   getters: {
     theme: (state) => state.themeMode,
@@ -113,6 +115,9 @@ export const useAppStore = defineStore('app', {
         window.msClient.getVersion().then(value => {
           this.serverVersion = value.pkgVersion
           localStorage.setItem(SERVER_VERSION, value.pkgVersion)
+        })
+        window.msClient.httpRequest.get<Record<string, boolean>>('/experimental-features').then(value => {
+          this.experimentalFeatures = value
         })
       }
     },
