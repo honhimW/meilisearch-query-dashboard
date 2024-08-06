@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { MeiliSearch } from 'meilisearch'
 import router from '@/router'
+import mitt, { type Emitter, type EventType } from 'mitt'
 
 interface IAppStore {
   themeMode: 'light' | 'dark'
@@ -13,6 +14,7 @@ interface IAppStore {
   apiKey?: string
   serverVersion?: string
   experimentalFeatures?: Record<string, boolean>
+  emitter?: Emitter<Record<EventType, unknown>>
 }
 
 const LIGHT = 'light';
@@ -37,6 +39,7 @@ export const useAppStore = defineStore('app', {
     apiKey: undefined,
     serverVersion: undefined,
     experimentalFeatures: undefined,
+    emitter: mitt()
   }),
   getters: {
     theme: (state) => state.themeMode,

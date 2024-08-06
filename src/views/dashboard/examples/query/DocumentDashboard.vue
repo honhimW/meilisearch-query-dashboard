@@ -2,16 +2,16 @@
 import { computed, onMounted, ref } from 'vue'
 import { useThrottleFn } from '@vueuse/core'
 import { type Attribute, type ScreenProps } from './Screen.vue'
-import { cn, formattedCount, sleep } from '@/lib/utils'
+import { cn, formattedCount } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import type { MDocument } from '@/views/dashboard/examples/query/DocumentList.vue'
 import type { MultiSearchQuery, SearchParams } from 'meilisearch/src/types/types'
 import { type FieldDistribution, type Hit, type MultiSearchResult, type Settings } from 'meilisearch'
-import { ArrowLeftToLine, LoaderCircle, CircleCheckBig } from 'lucide-vue-next'
+import { ArrowLeftToLine, CircleCheckBig, LoaderCircle } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
-import { getQuery, updateQueries } from '@/stores/app'
+import { getQuery, updateQueries, useAppStore } from '@/stores/app'
 import { useToast } from '@/components/ui/toast'
 import { DocumentDisplay, DocumentList, IndexSwitcher, MultiSearchPopover, Screen } from './'
 import { MeiliSearchCommunicationError } from 'meilisearch/src/errors/meilisearch-communication-error'
@@ -47,15 +47,17 @@ const refreshIndexes = (hook: () => void) => {
         primaryKey: primaryKey,
         count: '0',
         settings: undefined,
-        fieldDistribution: undefined,
+        fieldDistribution: undefined
       }
       indexes.value.push(item)
       index.getStats().then(stats => {
         item.count = formattedCount(stats.numberOfDocuments, 1)
         item.fieldDistribution = stats.fieldDistribution
-        hook()
+      }).then(() => {
+        index.getSettings().then(settings => item.settings = settings)
+          .then(() => hook())
+          .then(() => useAppStore().emitter?.emit('index-refreshed'))
       })
-      index.getSettings().then(settings => item.settings = settings)
     })
   })
 }
@@ -82,7 +84,7 @@ const mergeResults = ref<Array<MDocument>>([])
 const estimatedTotalHits = ref<number>(0)
 const processingTimeMs = ref<number>(0)
 
-const latestQuery = ref<SearchParams | string>()
+const latestQuery = ref<SearchParams[] | string>()
 const latestPage = ref<number>(0)
 
 const searchLimit = () => {
@@ -94,14 +96,15 @@ const currentIndex = computed<IndexHolder | undefined>(oldValue => {
   return indexes.value.find(value => value.uid == index)
 })
 
-const search = (query?: SearchParams | string, page = 0) => {
-  usingSingleSearch(query, page)
+const search = (query?: SearchParams[] | string, page = 0) => {
+  // usingSingleSearch(query, page)
+  usingFederationSearch(query, page)
   // usingMultiSearch(query, page)
 }
 
 const throttleSearch = useThrottleFn(search, 200)
 
-const usingSingleSearch = async (query?: SearchParams | string, page = 0) => {
+const usingSingleSearch = async (query?: SearchParams[] | string, page = 0) => {
   latestQuery.value = query
   latestPage.value = page
 
@@ -131,7 +134,7 @@ const usingSingleSearch = async (query?: SearchParams | string, page = 0) => {
       }
     } else {
       _searchQuery = {
-        ...query as SearchParams,
+        ...query?.[0] as SearchParams,
         limit: limit,
         offset: offset
       }
@@ -169,7 +172,78 @@ const usingSingleSearch = async (query?: SearchParams | string, page = 0) => {
   promise.finally(() => searching.value = false)
 }
 
-const usingMultiSearch = (query?: SearchParams | string, page = 0) => {
+const usingFederationSearch = async (query?: SearchParams[] | string, page = 0) => {
+  latestQuery.value = query
+  latestPage.value = page
+
+  let _limit = searchLimit()
+  let offset = _limit * page
+  let limit = _limit * (page + 1)
+
+  if (page == 0) {
+    results.value.length = 0
+    mergeResults.value.length = 0
+    mDocumentList.value = []
+  }
+  let index = getQuery('indexUid')
+  let promise
+  if (index) {
+    searching.value = true
+    let _searchQuery: MultiSearchQuery[] = []
+    if (typeof query == 'string') {
+      _searchQuery.push({
+        q: query,
+        indexUid: index,
+        attributesToHighlight: ['*'],
+        facets: [],
+        highlightPreTag: '<ais-hl-msq-t style="background-color: #ff5895; font-weight: bold">',
+        highlightPostTag: '</ais-hl-msq-t>'
+      })
+    } else {
+      query?.map(value => ({
+        ...value,
+        indexUid: index,
+      })).forEach(value => _searchQuery.push(value))
+    }
+    // await sleep(1000)
+    try {
+      promise = window.msClient.httpRequest.post('/multi-search', {
+        queries: _searchQuery,
+        federation: {
+          limit: limit,
+          offset: offset
+        }
+      }).then(value => {
+        let results = [{
+          ...value,
+          indexUid: index
+        }]
+        estimatedTotalHits.value = results[0].estimatedTotalHits ?? 0
+        processingTimeMs.value = results[0].processingTimeMs ?? 0
+        renderList(results, mergeResults.value, page == 0)
+        mDocumentList.value = mergeResults.value
+      }).catch(reason => {
+        let error = reason as MeiliSearchCommunicationError
+        useToast().toast({
+          class: cn(
+            'right-0 bottom-0 flex fixed md:max-w-[420px] md:right-4 md:bottom-4'
+          ),
+          variant: 'destructive',
+          title: `${error.code}`,
+          description: error.message,
+          duration: 4000
+        })
+      })
+    } catch (e) {
+      promise = new Promise((resolve, reject) => reject.apply((e as Error).message))
+    }
+  } else {
+    promise = new Promise((resolve, reject) => reject.apply('indexUid is missing.'))
+  }
+  promise.finally(() => searching.value = false)
+}
+
+const usingMultiSearch = (query?: SearchParams[] | string, page = 0) => {
   latestQuery.value = query
   latestPage.value = page
 
@@ -181,6 +255,11 @@ const usingMultiSearch = (query?: SearchParams | string, page = 0) => {
     results.value.length = 0
     mergeResults.value.length = 0
   }
+  let federation = {
+    limit: limit,
+    offset: offset
+  }
+
   let index = getQuery('indexUid')
   if (index) {
     let _searchQuery: MultiSearchQuery
@@ -197,14 +276,12 @@ const usingMultiSearch = (query?: SearchParams | string, page = 0) => {
       }
     } else {
       _searchQuery = {
-        ...query as SearchParams,
-        indexUid: index as string,
-        limit: limit,
-        offset: offset
+        ...query?.[0] as SearchParams,
+        indexUid: index as string
       }
     }
     window.msClient?.multiSearch({
-      queries: [_searchQuery]
+      queries: [_searchQuery],
     }).then(value => {
       let results = value.results
       estimatedTotalHits.value = results[0].estimatedTotalHits ?? 0
@@ -256,7 +333,8 @@ const renderList = (results: Array<MultiSearchResult<Record<string, any>>>, merg
           title: key,
           label: '1',
           icon: '',
-          variant: 'ghost'
+          variant: 'ghost',
+          fromFieldDistribution: false
         }
         if (!screenKeys.value.includes(key)) {
           let pk = indexes.value.filter(_idx => _idx.uid === indexUid).map(_idx => _idx.primaryKey).at(0)
@@ -306,7 +384,8 @@ onMounted(() => {
       screenAttributes.value.selected.push({
         title: value,
         icon: '',
-        variant: 'ghost'
+        variant: 'ghost',
+        fromFieldDistribution: false
       })
     })
   }
@@ -406,8 +485,8 @@ const rotate = (event: any) => {
               </div>
             </div>
             <div class="grid gap-1">
-              <LoaderCircle v-if="searching" class="rotate-loader h-5 w-5"/>
-              <CircleCheckBig v-else-if="processingTimeMs" class="h-5 w-5"/>
+              <LoaderCircle v-if="searching" class="rotate-loader h-5 w-5" />
+              <CircleCheckBig v-else-if="processingTimeMs" class="h-5 w-5" />
             </div>
           </div>
         </div>

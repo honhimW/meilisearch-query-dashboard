@@ -42,6 +42,7 @@ FILTER_SYMBOLS
     | '<='
     | 'like'
     | 'raw'
+    | 'q'
     ;
 
 queryContent

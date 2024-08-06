@@ -4,7 +4,7 @@ import MonacoEditor from '@/views/dashboard/examples/query/MonacoEditor.vue'
 import * as monaco from 'monaco-editor'
 import { type CancellationToken, editor, languages, MarkerSeverity } from 'monaco-editor'
 import { computed, onMounted, ref, watch } from 'vue'
-import { getQuery, ThemeChangeEvent, updateQueries } from '@/stores/app'
+import { getQuery, ThemeChangeEvent, updateQueries, useAppStore } from '@/stores/app'
 import { useMagicKeys } from '@vueuse/core'
 import { allSuggestions } from '@/views/dashboard/examples/query/dsl/suggestions'
 import { parse2SearchParam } from '@/views/dashboard/examples/query/dsl/MsDslTransformer'
@@ -14,18 +14,15 @@ import type { IndexHolder } from '@/views/dashboard/examples/query/DocumentDashb
 import type { Settings } from 'meilisearch'
 import { SearchCheck, SearchX } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
-import CompletionItemKind = languages.CompletionItemKind
 
 const props = defineProps<{
   indexes?: IndexHolder[]
 }>()
 const emits = defineEmits<{
-  (e: 'performSearch', payload?: SearchParams | string): void
+  (e: 'performSearch', payload?: SearchParams[] | string): void
 }>()
 
 const searchStr = ref<string>('')
-const searchParamsRef = ref<SearchParams | undefined>()
 const editorRef = ref<monaco.editor.IStandaloneCodeEditor>()
 const markersRef = ref<editor.IMarkerData[]>()
 
@@ -61,7 +58,7 @@ const getSetting = (): Settings | undefined => {
 const emitSearch = () => {
   try {
     let searchParams = parse2SearchParam(searchStr.value, getSetting())
-    emits('performSearch', searchParams.sp)
+    emits('performSearch', searchParams.searchParamsArray)
   } catch (e) {
     emits('performSearch', searchStr.value)
   }
@@ -118,8 +115,7 @@ const customizeEditor = (editor: monaco.editor.IStandaloneCodeEditor) => {
 }
 
 const updateMarker = () => {
-  let { sp, le, pe, settingErrors } = parse2SearchParam(searchStr.value, getSetting())
-  searchParamsRef.value = sp
+  let { le, pe, settingErrors } = parse2SearchParam(searchStr.value, getSetting())
   let errors: MsDslError[] = []
   if (le.length > 0) {
     le.forEach((error) => errors.push(error))
@@ -219,6 +215,7 @@ onMounted(() => {
   }
   emitSearch()
   configDSL()
+  useAppStore().emitter?.on('index-refreshed', updateMarker)
 })
 
 const configDSL = () => {
@@ -279,31 +276,15 @@ const hasDslError = computed(oldValue => {
   }
 })
 
-const showCard = computed(oldValue => {
-  return (searchStr.value?.length ?? 0) > 0 && searchParamsRef
-})
-
 </script>
 
 <template>
-  <HoverCard>
-    <HoverCardTrigger as-child >
-      <Button variant="outline" class="border-0 p-[6px] w-8 h-8" @click="performSearch">
-        <SearchCheck v-if="!hasDslError"
-                     class="transition-all duration-500" />
-        <SearchX v-else
+  <Button variant="outline" class="border-0 p-[6px] w-8 h-8" @click="performSearch">
+    <SearchCheck v-if="!hasDslError"
                  class="transition-all duration-500" />
-      </Button>
-    </HoverCardTrigger>
-    <HoverCardContent class="w-96 h-80" v-if="showCard">
-      <MonacoEditor
-        :theme="monacoTheme"
-        :model-value="JSON.stringify(searchParamsRef, null, 2)"
-        :options="jsonCardOptions"
-        language="json"
-      />
-    </HoverCardContent>
-  </HoverCard>
+    <SearchX v-else
+             class="transition-all duration-500" />
+  </Button>
   <MonacoEditor
     :theme="monacoTheme"
     :model-value="searchStr"

@@ -318,15 +318,17 @@ const resolveByPreTokens = async (tokenStream: TokenStream, prevIndex: number, t
       )
     })
   } else if (isTokens(tokens, 'HASH', 'IDENTIFIER', '\':\'') || isTokens(tokens, 'STRING', '\':\'')) {
+    const template = { desc: 'filter', detail: '' }
     const symbols = [
-      { label: '=', insert: `= $\{1} ` },
-      { label: '!=', insert: `!= $\{1} ` },
-      { label: '>', insert: `> $\{1} ` },
-      { label: '>=', insert: `>= $\{1} ` },
-      { label: '<', insert: `< $\{1} ` },
-      { label: '<=', insert: `<= $\{1} ` },
-      { label: 'like', insert: `like '%$\{1}%' ` },
-      { label: 'raw', insert: `raw $\{1} ` },
+      { ...template, label: '=', insert: `= $\{1} ` },
+      { ...template, label: '!=', insert: `!= $\{1} ` },
+      { ...template, label: '>', insert: `> $\{1} ` },
+      { ...template, label: '>=', insert: `>= $\{1} ` },
+      { ...template, label: '<', insert: `< $\{1} ` },
+      { ...template, label: '<=', insert: `<= $\{1} ` },
+      { ...template, label: 'like', insert: `like '%$\{1}%' ` },
+      { ...template, label: 'raw', insert: `raw $\{1} ` },
+      { ...template, label: 'q', insert: `raw $\{1} `, desc: 'federation' },
     ]
     symbols.map(symbol => {
       return {
@@ -334,8 +336,8 @@ const resolveByPreTokens = async (tokenStream: TokenStream, prevIndex: number, t
         insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
         label: {
           label: ' ' + symbol.label,
-          detail: '',
-          description: 'filter'
+          detail: symbol.detail,
+          description: symbol.desc
         },
         range: {
           startLineNumber: 1,

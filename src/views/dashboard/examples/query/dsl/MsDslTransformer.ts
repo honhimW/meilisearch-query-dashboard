@@ -8,6 +8,7 @@ import { TokenStream } from 'antlr4/src/antlr4/TokenStream'
 import { ParserRuleContext } from 'antlr4/src/antlr4/context/ParserRuleContext'
 import { useAppStore } from '@/stores/app'
 import * as test from 'node:test'
+import { versionAfter } from '@/lib/utils'
 
 export const checkLexer = (input: string): MsDslError[] | undefined => {
   const { lexerErrors } = toAST(input)
@@ -24,7 +25,7 @@ export const checkParser = (input: string): MsDslError[] | undefined => {
 }
 
 export const parse2SearchParam = (input: string, settings?: Settings): {
-  sp: SearchParams,
+  searchParamsArray: SearchParams[],
   le: MsDslError[],
   pe: MsDslError[],
   tokenStream: TokenStream,
@@ -52,8 +53,9 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
     filter: filters,
     sort: sorts
   }
+  const federationSearchParams = [searchParams]
 
-  if (useAppStore().serverVersion >= '1.3') {
+  if (versionAfter(useAppStore().serverVersion, '1.3')) {
     searchParams.showRankingScore = true
     searchParams.attributesToSearchOn = ['*']
   }
@@ -69,6 +71,8 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
     settings.sortableAttributes?.forEach(attr => sortableAttributes?.push(attr))
     settings.searchableAttributes?.forEach(attr => searchableAttributes?.push(attr))
   }
+
+  let hasQueryContent: boolean = false
 
   try {
     for (const cc of contentContexts) {
@@ -111,7 +115,20 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
           if (symbolText == 'raw') {
             filters.push(unquote(valueText))
           } else {
-            filters.push(`${keyText} ${symbolText} ${valueText}`)
+            if (symbolText == 'q') {
+              federationSearchParams.push({
+                q: unquote(valueText),
+                attributesToHighlight: ['*'],
+                facets: [],
+                highlightPreTag: '<ais-hl-msq-t style="background-color: #ff5895; font-weight: bold">',
+                highlightPostTag: '</ais-hl-msq-t>',
+                filter: filters,
+                sort: sorts,
+                attributesToSearchOn: [keyText]
+              })
+            } else {
+              filters.push(`${keyText} ${symbolText} ${valueText}`)
+            }
           }
         }
       } else if (cc.sortContent()) {
@@ -152,7 +169,7 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
           })
         }
         ons.push(key)
-        if (useAppStore().serverVersion >= '1.3') {
+        if (versionAfter(useAppStore().serverVersion, '1.3')) {
           searchParams.attributesToSearchOn = ons
         } else {
           settingErrors.push({
@@ -163,6 +180,7 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
           })
         }
       } else if (cc.queryContent()) {
+        hasQueryContent = true
         const queryContentContext = cc.queryContent()
         const query = getQuery(queryContentContext)
         if (query) {
@@ -177,8 +195,11 @@ export const parse2SearchParam = (input: string, settings?: Settings): {
   } catch (e) {
     console.log(e.toString())
   }
+  if (!hasQueryContent && federationSearchParams.length > 1) {
+    federationSearchParams.shift()
+  }
   return {
-    sp: searchParams,
+    searchParamsArray: federationSearchParams,
     le: lexerErrors,
     pe: parserErrors,
     tokenStream: tokenStream,

@@ -12,6 +12,7 @@ export interface Attribute {
   label?: string
   icon: string
   variant: 'default' | 'ghost'
+  fromFieldDistribution: boolean
 }
 
 export interface ScreenProps {

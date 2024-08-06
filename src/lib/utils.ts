@@ -30,3 +30,22 @@ export function formattedCount(count: number, digits = 0): string {
 export async function sleep(ms: number) {
   await new Promise(resolve => setTimeout(resolve, ms))
 }
+
+export function versionAfter(current: string, expected: string): boolean {
+  const current_versions = current.split('.')
+  const expected_versions = expected.split('.')
+  const len = Math.min(current_versions.length, expected_versions.length)
+
+  for (let i = 0; i < len; i++) {
+    const cv = current_versions[i]
+    const ev = expected_versions[i]
+
+    if (cv > ev || cv.length > ev.length) {
+      return true
+    } else if (cv < ev || cv.length < ev.length) {
+      return false
+    }
+  }
+
+  return true
+}

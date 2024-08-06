@@ -7,7 +7,10 @@
 
 ### Preview
 
-![/Query](./misc/screenshot_2.png "Dashboard")
+![/Query](./misc/screenshot_query.png "Query")
+![/Query](./misc/screenshot_settings.png "Query")
+![/Query](./misc/screenshot_settings_diff_view.png "Query")
+![/Query](./misc/screenshot_tasks.png "Query")
 
 ## Simple Query DSL (Antlr4)
 
@@ -23,6 +26,7 @@
 * \< : Less than
 * \<= : Less than or equal to
 * like: CONTAINS('%any%') | STARTS WITH('%any') | ENDS WITH('any%') in (prototype-contains-starts-ends-with-filters-0)
+* q : another federation searchParams with only one attributes to search on.
 
 ```html
 #<attribute> : <operator> <value>
