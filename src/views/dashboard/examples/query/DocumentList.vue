@@ -3,6 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import ListItem from '@/views/dashboard/examples/query/ListItem.vue'
 import type { Attribute, ScreenProps } from '@/views/dashboard/examples/query/Screen.vue'
+import { Button } from '@/components/ui/button'
 
 export interface MDocument {
   indexUid?: string
@@ -38,7 +39,7 @@ const onSelectedDocument = (item: MDocument) => {
 </script>
 
 <template>
-    <ScrollArea style="height: 75vh" class=" flex" @reach-bottom="emits('reach-bottom')">
+    <ScrollArea style="height: 72vh" class=" flex" @reach-bottom="emits('reach-bottom')">
       <div class="flex-1 flex flex-col gap-2 p-4 pt-0">
         <TransitionGroup name="list" appear>
           <div
@@ -56,6 +57,9 @@ const onSelectedDocument = (item: MDocument) => {
             </div>
           </div>
         </TransitionGroup>
+        <Button variant="outline" size="sm" style="width: 200px; align-self: center" @click="emits('reach-bottom')">
+          Load more
+        </Button>
       </div>
 
     </ScrollArea>

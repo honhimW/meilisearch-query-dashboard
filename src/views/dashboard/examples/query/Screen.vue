@@ -66,7 +66,7 @@ const minus = (attr: Attribute) => {
     <p
       class="uppercase text-xs font-light text-gray-400 mb-2 tracking-widest transition-all duration-300 delay-100"
     >
-      {{ 'SELECTED' }}
+      {{ 'PROJECTION' }}
     </p>
 
     <draggable
@@ -122,11 +122,6 @@ const minus = (attr: Attribute) => {
     </draggable>
 
     <Separator />
-    <p
-      class="uppercase text-xs font-light text-gray-400 mb-2 tracking-widest transition-all duration-300 delay-100"
-    >
-      {{ 'UNSELECTED' }}
-    </p>
     <draggable
       :list="unselectedRef"
       :disable="false"

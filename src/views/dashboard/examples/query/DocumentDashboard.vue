@@ -90,6 +90,9 @@ const latestPage = ref<number>(0)
 const searchLimit = () => {
   return Number(getQuery('limit') ?? '20')
 }
+const searchOffset = () => {
+  return Number(getQuery('offset') ?? '-1')
+}
 
 const currentIndex = computed<IndexHolder | undefined>(oldValue => {
   let index = getQuery('indexUid')
@@ -97,26 +100,36 @@ const currentIndex = computed<IndexHolder | undefined>(oldValue => {
 })
 
 const search = (query?: SearchParams[] | string, page = 0) => {
-  // usingSingleSearch(query, page)
-  usingFederationSearch(query, page)
-  // usingMultiSearch(query, page)
-}
-
-const throttleSearch = useThrottleFn(search, 200)
-
-const usingSingleSearch = async (query?: SearchParams[] | string, page = 0) => {
   latestQuery.value = query
   latestPage.value = page
 
+  let _offset = searchOffset()
   let _limit = searchLimit()
-  let offset = _limit * page
-  let limit = _limit * (page + 1)
+  updateQueries('limit', oldValue => `${_limit}`)
+  let offset: number
+  let limit: number
+  if (_offset > 0) {
+    offset = _offset
+    limit = _limit
+  } else {
+    offset = _limit * page
+    limit = _limit
+  }
 
   if (page == 0) {
     results.value.length = 0
     mergeResults.value.length = 0
     mDocumentList.value = []
   }
+
+  // usingSingleSearch(query, limit, offset)
+  usingFederationSearch(query ?? '', limit, offset)
+  // usingMultiSearch(query, limit, offset)
+}
+
+const throttleSearch = useThrottleFn(search, 200)
+
+const usingSingleSearch = async (query: SearchParams[] | string, limit: number, offset: number) => {
   let index = getQuery('indexUid')
   let promise
   if (index) {
@@ -149,7 +162,7 @@ const usingSingleSearch = async (query?: SearchParams[] | string, page = 0) => {
           }]
           estimatedTotalHits.value = results[0].estimatedTotalHits ?? 0
           processingTimeMs.value = results[0].processingTimeMs ?? 0
-          renderList(results, mergeResults.value, page == 0)
+          renderList(results, mergeResults.value, offset == 0)
           mDocumentList.value = mergeResults.value
         }).catch(reason => {
           let error = reason as MeiliSearchCommunicationError
@@ -172,19 +185,7 @@ const usingSingleSearch = async (query?: SearchParams[] | string, page = 0) => {
   promise.finally(() => searching.value = false)
 }
 
-const usingFederationSearch = async (query?: SearchParams[] | string, page = 0) => {
-  latestQuery.value = query
-  latestPage.value = page
-
-  let _limit = searchLimit()
-  let offset = _limit * page
-  let limit = _limit * (page + 1)
-
-  if (page == 0) {
-    results.value.length = 0
-    mergeResults.value.length = 0
-    mDocumentList.value = []
-  }
+const usingFederationSearch = async (query: SearchParams[] | string, limit: number, offset: number) => {
   let index = getQuery('indexUid')
   let promise
   if (index) {
@@ -220,7 +221,7 @@ const usingFederationSearch = async (query?: SearchParams[] | string, page = 0) 
         }]
         estimatedTotalHits.value = results[0].estimatedTotalHits ?? 0
         processingTimeMs.value = results[0].processingTimeMs ?? 0
-        renderList(results, mergeResults.value, page == 0)
+        renderList(results, mergeResults.value, offset == 0)
         mDocumentList.value = mergeResults.value
       }).catch(reason => {
         let error = reason as MeiliSearchCommunicationError
@@ -243,23 +244,7 @@ const usingFederationSearch = async (query?: SearchParams[] | string, page = 0) 
   promise.finally(() => searching.value = false)
 }
 
-const usingMultiSearch = (query?: SearchParams[] | string, page = 0) => {
-  latestQuery.value = query
-  latestPage.value = page
-
-  let _limit = searchLimit()
-  let offset = _limit * page
-  let limit = _limit * (page + 1)
-
-  if (page == 0) {
-    results.value.length = 0
-    mergeResults.value.length = 0
-  }
-  let federation = {
-    limit: limit,
-    offset: offset
-  }
-
+const usingMultiSearch = (query: SearchParams[] | string, limit: number, offset: number) => {
   let index = getQuery('indexUid')
   if (index) {
     let _searchQuery: MultiSearchQuery
@@ -286,7 +271,7 @@ const usingMultiSearch = (query?: SearchParams[] | string, page = 0) => {
       let results = value.results
       estimatedTotalHits.value = results[0].estimatedTotalHits ?? 0
       processingTimeMs.value = results[0].processingTimeMs ?? 0
-      renderList(results, mergeResults.value, page == 0)
+      renderList(results, mergeResults.value, offset == 0)
       mDocumentList.value = mergeResults.value
     }).catch(reason => {
       let error = reason as MeiliSearchCommunicationError
@@ -496,7 +481,7 @@ const rotate = (event: any) => {
                         :documents="mDocumentList"
                         :searching="searching"
                         @click-document="spreadDocument = true"
-                        @reach-bottom="() => {search(latestQuery, latestPage + 1)}"
+                        @reach-bottom="() => {throttleSearch(latestQuery, latestPage + 1)}"
           />
         </TabsContent>
       </Tabs>
