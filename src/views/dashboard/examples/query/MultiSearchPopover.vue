@@ -2,7 +2,7 @@
 import type { SearchParams } from 'meilisearch/src/types/types'
 import MonacoEditor from '@/views/dashboard/examples/query/MonacoEditor.vue'
 import * as monaco from 'monaco-editor'
-import { type CancellationToken, editor, languages, MarkerSeverity } from 'monaco-editor'
+import { type CancellationToken, editor, MarkerSeverity } from 'monaco-editor'
 import { computed, onMounted, ref, watch } from 'vue'
 import { getQuery, ThemeChangeEvent, updateQueries, useAppStore } from '@/stores/app'
 import { useMagicKeys } from '@vueuse/core'
@@ -117,8 +117,13 @@ const customizeEditor = (editor: monaco.editor.IStandaloneCodeEditor) => {
     label: 'Copy As Single Search',
     contextMenuGroupId: '9_cutcopypaste',
     contextMenuOrder: -2,
-    run: _e => {
-
+    run: () => {
+      try {
+        let searchParams = parse2SearchParam(searchStr.value, getSetting())
+        clipboard(JSON.stringify(searchParams.searchParamsArray?.[0], null, 2))
+      } catch (e) {
+        console.error(e)
+      }
     }
   })
   editor.addAction({
@@ -126,8 +131,18 @@ const customizeEditor = (editor: monaco.editor.IStandaloneCodeEditor) => {
     label: 'Copy As Multi Search',
     contextMenuGroupId: '9_cutcopypaste',
     contextMenuOrder: -1,
-    run: _e => {
-
+    run: () => {
+      try {
+        let searchParams = parse2SearchParam(searchStr.value, getSetting())
+        let searchParamsArrayElement = searchParams.searchParamsArray?.[0]
+        let multiSearchParam = {
+          ...searchParamsArrayElement,
+          indexUid: ':index_uid'
+        }
+        clipboard(JSON.stringify(multiSearchParam, null, 2))
+      } catch (e) {
+        console.error(e)
+      }
     }
   })
   editor.addAction({
@@ -135,10 +150,31 @@ const customizeEditor = (editor: monaco.editor.IStandaloneCodeEditor) => {
     label: 'Copy As Federation',
     contextMenuGroupId: '9_cutcopypaste',
     contextMenuOrder: 0,
-    run: _e => {
-
+    run: () => {
+      try {
+        let index = ':index_uid'
+        let searchParams = parse2SearchParam(searchStr.value, getSetting())
+        let queries = searchParams.searchParamsArray.map(value => ({
+          ...value,
+          indexUid: index
+        }))
+        let federationParams = {
+          queries,
+          federation: {
+            offset: 0,
+            limit: 20
+          }
+        }
+        clipboard(JSON.stringify(federationParams, null, 2))
+      } catch (e) {
+        console.error(e)
+      }
     }
   })
+}
+
+const clipboard = (text: string) => {
+  navigator.clipboard.writeText(text)
 }
 
 const updateMarker = () => {

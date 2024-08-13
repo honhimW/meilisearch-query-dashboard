@@ -470,8 +470,8 @@ const rotate = (event: any) => {
               </div>
             </div>
             <div class="grid gap-1">
-              <LoaderCircle v-if="searching" class="rotate-loader h-5 w-5" />
-              <CircleCheckBig v-else-if="processingTimeMs" class="h-5 w-5" />
+              <LoaderCircle v-if="searching" class="rotate-loader h-5 w-5" style="color: darkorange"/>
+              <CircleCheckBig v-else-if="processingTimeMs" class="h-5 w-5" style="color: darkgreen"/>
             </div>
           </div>
         </div>
