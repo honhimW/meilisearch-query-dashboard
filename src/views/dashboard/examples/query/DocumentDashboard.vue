@@ -476,19 +476,31 @@ const rotate = (event: any) => {
           </div>
         </div>
         <Separator />
-        <TabsContent value="all" class="m-0 p-4">
-          <DocumentList v-model:selected-document="selectedDocument"
-                        :documents="mDocumentList"
-                        :searching="searching"
-                        @click-document="spreadDocument = true"
-                        @reach-bottom="() => {throttleSearch(latestQuery, latestPage + 1)}"
-          />
-        </TabsContent>
+        <ResizablePanelGroup
+            id="resize-panel-group-2"
+            direction="horizontal"
+            :class="cn(
+          'h-full',
+          'items-stretch',
+          'max-h-[100%]',
+        )"
+          >
+          <ResizablePanel id="resize-panel-2" :default-size="defaultLayout[1]" :min-size="20">
+            <TabsContent value="all" class="m-0 p-4">
+              <DocumentList v-model:selected-document="selectedDocument"
+                            :documents="mDocumentList"
+                            :searching="searching"
+                            @click-document="spreadDocument = true"
+                            @reach-bottom="() => {throttleSearch(latestQuery, latestPage + 1)}"
+              />
+            </TabsContent>
+          </ResizablePanel>
+          <ResizableHandle v-if="spreadDocument" id="resiz-handle-2" with-handle />
+          <ResizablePanel v-if="spreadDocument" id="resize-panel-3" :default-size="defaultLayout[2]">
+            <DocumentDisplay :doc="selectedDocumentData" @close-display="spreadDocument = false" />
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </Tabs>
-    </ResizablePanel>
-    <ResizableHandle v-if="spreadDocument" id="resiz-handle-2" with-handle />
-    <ResizablePanel v-if="spreadDocument" id="resize-panel-3" :default-size="defaultLayout[2]">
-      <DocumentDisplay :doc="selectedDocumentData" @close-display="spreadDocument = false" />
     </ResizablePanel>
   </ResizablePanelGroup>
 </template>

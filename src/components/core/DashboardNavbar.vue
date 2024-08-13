@@ -45,50 +45,16 @@ const updateExperimentalFeatures = (key: string, enabled: boolean) => {
       <Menu class="transition-all duration-500 text-black" />
     </Button>
     <div class="flex items-center">
-      <!--      <Button variant="outline" class="border-0 p-[6px] w-8 h-8">-->
-      <!--        <Bell />-->
-      <!--      </Button>-->
       <Button variant="outline" class="border-0 p-[6px] ml-2 w-8 h-8" @click="toggleMode">
         <Sun v-if="store.isDark" />
         <MoonStar v-else />
       </Button>
       <div class="border-x-[1px] border-gray-300 h-[24px] w-[1px] mx-2"></div>
-      <!--      <TooltipProvider :delay-duration="0">-->
-      <!--        <Tooltip>-->
-      <!--          <TooltipTrigger as-child>-->
-      <!--            <Button variant="outline" class="border-0 p-[6px] w-8 h-8" @click="store.toggleDialog(true)">-->
-      <!--              <Zap v-if="store.serverUrl" style="color: deeppink" />-->
-      <!--              <ZapOff v-else style="color: darkred" />-->
-      <!--            </Button>-->
-      <!--          </TooltipTrigger>-->
-      <!--          <TooltipContent>-->
-      <!--            <div class="flex justify-between space-x-4">-->
-      <!--              <div class="space-y-1">-->
-      <!--                <div class="flex justify-between">-->
-      <!--                  <PartyPopper class="mr-2 h-4 w-4" />-->
-      <!--                  <h4 class="text-sm font-semibold">-->
-      <!--                    {{ store.serverVersion ?? 'Unknown' }}-->
-      <!--                  </h4>-->
-      <!--                </div>-->
-      <!--                <Separator />-->
-      <!--                <div class="flex justify-between">-->
-      <!--                  <Link class="mr-2 h-4 w-4" />-->
-      <!--                  <a v-if="store.serverUrl" :href="store.serverUrl" target="_blank">-->
-      <!--                    {{ store.serverUrl }}-->
-      <!--                  </a>-->
-      <!--                  <span v-else class="text-sm">-->
-      <!--                    {{ 'Not Connected.' }}-->
-      <!--                  </span>-->
-      <!--                </div>-->
-      <!--              </div>-->
-      <!--            </div>-->
-      <!--          </TooltipContent>-->
-      <!--        </Tooltip>-->
-      <!--      </TooltipProvider>-->
       <HoverCard>
         <HoverCardTrigger as-child>
           <Button variant="outline" class="border-0 p-[6px] w-8 h-8" @click="store.toggleDialog(true)">
-            <Power v-if="store.serverUrl" style="color: deeppink" />
+            <Power v-if="store.serverVersion" style="color: deeppink" />
+            <Power v-else-if="store.serverUrl" style="color: orangered" />
             <PowerOff v-else style="color: darkred" />
           </Button>
         </HoverCardTrigger>

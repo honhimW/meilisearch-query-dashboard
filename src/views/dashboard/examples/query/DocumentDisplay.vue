@@ -23,6 +23,7 @@ import { useToast } from '@/components/ui/toast'
 import { cn } from '@/lib/utils'
 import { MeiliSearchCommunicationError } from 'meilisearch/src/errors/meilisearch-communication-error'
 import SpreadDocumentsDrawer from '@/views/dashboard/examples/query/SpreadDocumentsDrawer.vue'
+
 const { toasts } = useToast()
 
 interface MailDisplayProps {
@@ -92,7 +93,7 @@ const saveDocument = () => {
           ),
           title: 'Update document!',
           description: value.taskUid.toString(),
-          duration: 4000,
+          duration: 4000
         })
       })
       .catch(reason => {
@@ -104,7 +105,7 @@ const saveDocument = () => {
           variant: 'destructive',
           title: `${error.code}`,
           description: error.message,
-          duration: 4000,
+          duration: 4000
         })
       })
   }
@@ -122,9 +123,9 @@ const deleteDocument = () => {
         description: h('div', {}, [
           h('pre', {}, `taskUid:  ${value.taskUid.toString()}`),
           h('pre', {}, `indexUid: ${props.doc?.indexUid}`),
-          h('pre', {}, `docId:    ${props.doc?.id}`),
+          h('pre', {}, `docId:    ${props.doc?.id}`)
         ]),
-        duration: 4000,
+        duration: 4000
       })
     })
   }
@@ -148,72 +149,10 @@ const deleteDocument = () => {
           <Separator orientation="vertical" class="mx-1 h-6" />
           <Tooltip>
             <TooltipTrigger as-child>
-              <SpreadDocumentsDrawer/>
+              <SpreadDocumentsDrawer />
             </TooltipTrigger>
             <TooltipContent>Spread</TooltipContent>
           </Tooltip>
-<!--          <Separator orientation="vertical" class="mx-1 h-6" />-->
-<!--          <Tooltip>-->
-<!--            <Popover>-->
-<!--              <PopoverTrigger as-child>-->
-<!--                <TooltipTrigger as-child>-->
-<!--                  <Button variant="ghost" size="icon" :disabled="!doc">-->
-<!--                    <Clock class="size-4" />-->
-<!--                    <span class="sr-only">Snooze</span>-->
-<!--                  </Button>-->
-<!--                </TooltipTrigger>-->
-<!--              </PopoverTrigger>-->
-<!--              <PopoverContent class="flex w-[535px] p-0">-->
-<!--                <div class="flex flex-col gap-2 border-r px-2 py-4">-->
-<!--                  <div class="px-4 text-sm font-medium">-->
-<!--                    Snooze until-->
-<!--                  </div>-->
-<!--                  <div class="grid min-w-[250px] gap-1">-->
-<!--                    <Button-->
-<!--                      variant="ghost"-->
-<!--                      class="justify-start font-normal"-->
-<!--                    >-->
-<!--                      Later today-->
-<!--                      <span class="ml-auto text-muted-foreground">-->
-<!--                      {{ format(addHours(today, 4), 'E, h:m b') }}-->
-<!--                    </span>-->
-<!--                    </Button>-->
-<!--                    <Button-->
-<!--                      variant="ghost"-->
-<!--                      class="justify-start font-normal"-->
-<!--                    >-->
-<!--                      Tomorrow-->
-<!--                      <span class="ml-auto text-muted-foreground">-->
-<!--                      {{ format(addDays(today, 1), 'E, h:m b') }}-->
-<!--                    </span>-->
-<!--                    </Button>-->
-<!--                    <Button-->
-<!--                      variant="ghost"-->
-<!--                      class="justify-start font-normal"-->
-<!--                    >-->
-<!--                      This weekend-->
-<!--                      <span class="ml-auto text-muted-foreground">-->
-<!--                      {{ format(nextSaturday(today), 'E, h:m b') }}-->
-<!--                    </span>-->
-<!--                    </Button>-->
-<!--                    <Button-->
-<!--                      variant="ghost"-->
-<!--                      class="justify-start font-normal"-->
-<!--                    >-->
-<!--                      Next week-->
-<!--                      <span class="ml-auto text-muted-foreground">-->
-<!--                      {{ format(addDays(today, 7), 'E, h:m b') }}-->
-<!--                    </span>-->
-<!--                    </Button>-->
-<!--                  </div>-->
-<!--                </div>-->
-<!--                <div class="p-2">-->
-<!--                  <Calendar />-->
-<!--                </div>-->
-<!--              </PopoverContent>-->
-<!--            </Popover>-->
-<!--            <TooltipContent>Snooze</TooltipContent>-->
-<!--          </Tooltip>-->
         </div>
         <div class="ml-auto flex items-center gap-2">
           <ToggleGroup type="single" v-model="displayType">
@@ -250,19 +189,6 @@ const deleteDocument = () => {
       </div>
       <Separator />
       <div v-if="doc" class="flex flex-1 flex-col">
-        <div class="flex items-start p-4">
-          <div class="flex items-start gap-4 text-sm">
-            <div class="grid gap-1">
-              <div class="font-semibold">
-                {{ doc.indexUid }}
-              </div>
-              <div class="line-clamp-1 text-xs">
-                {{ doc.id }}
-              </div>
-            </div>
-          </div>
-        </div>
-        <Separator />
         <MonacoEditor
           v-if="displayType === 'json'"
           :theme="monacoTheme"
@@ -277,9 +203,6 @@ const deleteDocument = () => {
           :row="doc.hit"
           class="max-w-[100%] max-h-[100%]"
         />
-        <!--      <div class="flex-1 whitespace-pre-wrap p-4 text-sm">-->
-        <!--        {{ doc.doc }}-->
-        <!--      </div>-->
         <Separator class="mt-auto" />
         <div class="p-4">
           <form>

@@ -112,6 +112,33 @@ const customizeEditor = (editor: monaco.editor.IStandaloneCodeEditor) => {
   editor.onDidChangeModelContent(e => {
     updateMarker()
   })
+  editor.addAction({
+    id: 'copy-as-single-search',
+    label: 'Copy As Single Search',
+    contextMenuGroupId: '9_cutcopypaste',
+    contextMenuOrder: -2,
+    run: _e => {
+
+    }
+  })
+  editor.addAction({
+    id: 'copy-as-multi-search',
+    label: 'Copy As Multi Search',
+    contextMenuGroupId: '9_cutcopypaste',
+    contextMenuOrder: -1,
+    run: _e => {
+
+    }
+  })
+  editor.addAction({
+    id: 'copy-as-federation-search',
+    label: 'Copy As Federation',
+    contextMenuGroupId: '9_cutcopypaste',
+    contextMenuOrder: 0,
+    run: _e => {
+
+    }
+  })
 }
 
 const updateMarker = () => {
@@ -168,7 +195,7 @@ const options: editor.IEditorOptions = {
     horizontal: 'hidden'
   },
   cursorStyle: 'line',
-  contextmenu: false,
+  contextmenu: true,
   minimap: {
     enabled: false
   },

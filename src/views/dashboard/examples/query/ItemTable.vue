@@ -58,7 +58,7 @@ const InnerHTMLComponent = defineComponent({
 })
 
 const resolveMedia = (raw: any) => {
-  if (typeof raw == 'string' && raw.indexOf('</aishl-msq-t>') != -1) {
+  if (typeof raw == 'string' && raw.indexOf('</ais-hl-msq-t>') != -1) {
     return h(InnerHTMLComponent, {
       class: ' font-medium source',
       style: 'word-break: break-word; white-space: pre-wrap',
@@ -73,22 +73,30 @@ const resolveMedia = (raw: any) => {
   let link = /^https:?\/\/.*/i
 
   let url = raw
-  if (imgRegex.test(url)) {
-    return h('img', { src: url, alt: 'Image', class: 'max-h-[240px]' })
-  } else if (audioRegex.test(url)) {
-    return h('audio', { controls: true, src: url })
-  } else if (videoRegex.test(url)) {
-    return h('video', { controls: true, src: url })
-  } else if (link.test(url)) {
-    return h('a', { href: url }, url)
-  } else {
-    return h(InnerHTMLComponent, {
-      class: ' font-medium source',
-      style: 'word-break: break-word; white-space: pre-wrap',
-      type: 'pre',
-      html: raw
-    })
+  let validUrl: boolean
+  try {
+    new URL(url)
+    validUrl = true
+  } catch (e) {
+    validUrl = false
   }
+  if (validUrl) {
+    if (imgRegex.test(url)) {
+      return h('img', { src: url, alt: 'Image', class: 'max-h-[240px]' })
+    } else if (audioRegex.test(url)) {
+      return h('audio', { controls: true, src: url })
+    } else if (videoRegex.test(url)) {
+      return h('video', { controls: true, src: url })
+    } else if (link.test(url)) {
+      return h('a', { href: url }, url)
+    }
+  }
+  return h(InnerHTMLComponent, {
+    class: ' font-medium source',
+    style: 'word-break: break-word; white-space: pre-wrap',
+    type: 'pre',
+    html: raw
+  })
 }
 
 const resolveGeo = (geo: {lat: number, lng: number}) => {
@@ -166,7 +174,7 @@ const columns: ColumnDef<IData>[] = [
   overflow-y: scroll;
   overflow-x: clip;
   display: inline-block;
-  height: 70vh;
+  height: 61vh;
 }
 
 span:hover {
